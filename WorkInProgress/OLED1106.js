@@ -28,23 +28,29 @@ var C = {
 };
 
 // commands sent when initialising the display
-var initCmds = new Uint8Array([ 0xAE, // 0 disp off
-                                0xD5, // 1 clk div
-                                0x50, // 2 suggested ratio
-                                0xA8, 63, // 3 set multiplex
-                                0xD3,0x0, // 5 display offset
-                                0x40, // 7 start line
-                                0xAD,0x8B, // 8 enable charge pump
-				0x32, // POR value related
-                                0xA1, // 10 seg remap 1, pin header at the top
-                                0xC8, // 11 comscandec, pin header at the top
-                                0xDA,0x12, // 12 set compins
-                                0x81,0xCF, // 14 set contrast
-                                0xD9,0x28, // 16 set precharge
-                                0xDB,0x35, // 18 set vcom detect
-								                0xA4,
-                                0xA6, // 20 display normal (non-inverted)
-                                0xAF // 21 disp on
+var initCmds = new Uint8Array([ 0xae,
+0xa8,
+0x3f,
+0xd5,
+0x51,
+0xc0,
+0xd3,
+0x60,
+0xdc,
+0x00,
+0x20,
+0x81,
+0x90,
+0xa0,
+0xa4,
+0xa6,
+0xad,
+0x8a,
+0xd9,
+0x22,
+0xdb,
+0x35
+
                               ]);
 
 function update(options) {
