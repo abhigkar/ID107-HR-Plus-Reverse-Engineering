@@ -122,6 +122,7 @@ exports.connectSPI = function(spi, dc,  rst, callback, options) {
             digitalWrite(dc,0); // command
             spi.write([page, 0x02, 0x10]);// display is centred in RAM
             page++;
+	    console.log(this.buffer);
             digitalWrite(dc,1);// data
             chunk.set(new Uint8Array(this.buffer,p,C.OLED_WIDTH), 0);
             spi.write(chunk);
