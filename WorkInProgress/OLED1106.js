@@ -35,7 +35,7 @@ var initCmds = new Uint8Array([ 0xAE, // 0 disp off
                                 0xD3,0x0, // 5 display offset
                                 0x40, // 7 start line
                                 0xAD,0x8B, // 8 enable charge pump
-								0x32, // POR value related
+				0x32, // POR value related
                                 0xA1, // 10 seg remap 1, pin header at the top
                                 0xC8, // 11 comscandec, pin header at the top
                                 0xDA,0x12, // 12 set compins
