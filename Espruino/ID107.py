@@ -93,7 +93,6 @@ def get_pins():
   pins = pinutils.generate_pins(0,31) # 32 General Purpose I/O Pins.
   pinutils.findpin(pins, "PD0", True)["functions"]["XL1"]=0;
   pinutils.findpin(pins, "PD1", True)["functions"]["XL2"]=0;
-  pinutils.findpin(pins, "PD10", True)["functions"]["NFC2"]=0;
   pinutils.findpin(pins, "PD2", True)["functions"]["ADC1_IN0"]=0;
   pinutils.findpin(pins, "PD3", True)["functions"]["ADC1_IN1"]=0;
   pinutils.findpin(pins, "PD4", True)["functions"]["ADC1_IN2"]=0;
