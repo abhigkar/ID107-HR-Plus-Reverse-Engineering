@@ -20,12 +20,12 @@ info = {
  'link' :  [ "https://github.com/abhigkar/ID107-HR-Plus-Reverse-Engineering" ],
  'espruino_page_link' : 'MDBT42Q',
   # This is the PCA10036
- 'default_console' : "EV_SERIAL1",
- 'default_console_tx' : "D6",
- 'default_console_rx' : "D8",
+ 'default_console' : "EV_BLUETOOTH",
+# 'default_console_tx' : "D6",
+ #'default_console_rx' : "D8",
  'default_console_baudrate' : "9600",
  'variables' : 2250, # How many variables are allocated for Espruino to use. RAM will be overflowed if this number is too high and code won't compile.
-# 'bootloader' : 1, //TODO BUILD error
+ 'bootloader' : 1, 
  'binary_name' : 'espruino_%v_ID107.hex',
  'build' : {
    'optimizeflags' : '-Os',
@@ -35,7 +35,7 @@ info = {
    ],
    'makefile' : [
      #'DEFINES+=-DCONFIG_GPIO_AS_PINRESET', # Allow the reset pin to work
-     'DEFINES+=-DBLUETOOTH_NAME_PREFIX=\'"ID107"\'',
+     'DEFINES+=-DBLUETOOTH_NAME_PREFIX=\'"Espruino-107"\'',
      'JSMODULESOURCES+=libs/js/Font4x4.min.js',
      'JSMODULESOURCES+=libs/js/Font4x8Numeric.min.js',
      'JSMODULESOURCES+=libs/js/Font4x4Numeric.min.js',
@@ -44,7 +44,6 @@ info = {
      'JSMODULESOURCES+=libs/js/Font8x12.min.js',
      'JSMODULESOURCES+=libs/js/Font8x16.min.js',
      'JSMODULESOURCES+=libs/js/FontDennis8.min.js',
-     'DEFINES += -DBOARD_PCA10040 -DPCA10040',
      'DFU_SETTINGS=--sd-req 129,136 --dev-type 572 --dev-revision 0x64' ## TODO change for ID107 HR plus
    ]
  }
