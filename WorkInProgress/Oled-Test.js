@@ -8,13 +8,13 @@ var rst= D20;
 var dc =  D22;
 var pwr = D26;
 
-var W = 64;
-var H = 128;
+var W = 128;
+var H = 64;
 
 var spi = new SPI();
 spi.setup({mosi: D31,sck: D30,baud: 8000000});
 var oled = Graphics.createArrayBuffer(H, W, 1, { vertical_byte: true });
-oled.setFont4x4();
+oled.setFont6x12();
 //begin
 pwr.mode("output");
 digitalWrite(pwr, 1);
@@ -34,8 +34,34 @@ setTimeout(function(){},10);
 digitalWrite(rst,1);
 setTimeout(function(){},10);
 */
- var initCmds = new Uint8Array([0xAE,0xD5,0x50,0xD3,0x00,0x40|0x00,0xad,0x8b,0x32,0xA0|0x01,0xC8,0xDA,0x12,0x81,0xcf,0xD9,0x28,0xDB,0x35,0xA4,0xA6, 0xAF]);
-
+var initCmds = new Uint8Array([
+                0xAE,//DISPLAYOFF 
+                0xD5, //SETDISPLAYCLOCKDIV 
+                0x80,
+                0xA8,//SETMULTIPLEX 
+                127,//_display_height - 1
+                0xD3,//SETDISPLAYOFFSET
+                0x00,
+                0x40,//SETSTARTLINE
+                0x8D,//CHARGEPUMP
+                0x14,
+                0x20,//MEMORYMODE 
+                0x00,
+                0xA1,//SEGREMAP 
+                0xC8,//COMSCANDEC
+                0xDA,//SETCOMPINS 
+                0x12,
+                0x81,//SETCONTRAST 
+                0xCF,
+                0xD9,//SETPRECHARGE 
+                0x1F,
+                0xDB,//SETVCOMDETECT 
+                0x40,
+                0xA4,//DISPLAYALLON_RESUME 
+                0xA6,//NORMALDISPLAY
+                0x2,//DEACTIVATESCROLL
+                0xAF//DISPLAYON 
+  ]);
  setTimeout(function () {
 	digitalWrite(cs, 1);
 	digitalWrite(dc, 0);
@@ -44,9 +70,7 @@ setTimeout(function(){},10);
 	digitalWrite(cs, 1);
  },50);
 
-oled.clear();
 
-oled.drawString("ID107 HR Plus",0,0);
 
 
 //flip
@@ -58,10 +82,11 @@ function flip(){
     digitalWrite(cs, 1);
 
 
-    const height= H / 8;
-    const width= W / 8;
+    const height= W / 8;
+    const width= H / 8;
     const m_row = 0;
-    const m_col = W / 2;
+    const m_col = H / 2;
+
 
     var p = 0;
 
@@ -71,11 +96,10 @@ function flip(){
         digitalWrite(cs, 0);
         spi.write([0xB0 + i + m_row,m_col & 0xf,0x10 | (m_col >> 4)]);
         digitalWrite(cs, 1);
-        for(var j = 0; j < width; j++){
-            for (var k = 0; k < width; k++, p++) {
-                    spi.write(oled.buffer[p]);
-            }
-        }
+        spi.write(new Uint8Array(oled.buffer, i*64, 64));
     }
-    pwr.reset();
+    pwr.set();
 }
+oled.clear();
+oled.drawString("ID107 HR Plus",0,0);
+flip();
