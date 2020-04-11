@@ -1,3 +1,6 @@
+//https://github.com/McCITS/SI1143_test_OLED/blob/master/SI1143_test_OLED_0.3.ino
+//https://github.com/Cornell-Engineering-World-Health/Si1143-Pulse-Oximetry
+
 var regAddress = {
     PART_ID : 0x00,
     REV_ID : 0x01,
@@ -116,6 +119,34 @@ function param_set(address, val){
 }
 
 
+function bias(){
+    for (var i=0; i<20; i++){
+        write_reg(regAddress.COMMAND,ramAddress.PS_FORCE_cmd);
+    }
+}
+
+void bias(void){  // Bias during start up
+  
+    for (int i=0; i<20; i++){
+      write_reg(COMMAND,PS_FORCE_cmd);
+      delay(50);
+    
+      byte LowB = read_reg(PS1_DATA0,1);
+      byte HighB = read_reg(PS1_DATA1,1);
+    
+      bias1 += ((HighB << 8) | LowB) / 20;
+    
+      LowB = read_reg(PS2_DATA0,1);
+      HighB = read_reg(PS2_DATA1,1);
+    
+      bias2 += ((HighB << 8) | LowB) / 20;
+    
+      LowB = read_reg(PS3_DATA0,1);
+      HighB = read_reg(PS3_DATA1,1);
+    
+      bias3 += ((HighB << 8) | LowB) / 20;
+   }
+
 function setup(){
     write_reg(regAddress.HW_KEY, 0x17); // Setting up LED Power to full
     write_reg(regAddress.PS_LED21,0xFF);
@@ -140,7 +171,7 @@ function readHR() { // return promiss
     return promise;
  }
 
-
+// calcHR();
 setup();
 readHR().then(function(done) {
     console.log(done); // --> 'done!'
