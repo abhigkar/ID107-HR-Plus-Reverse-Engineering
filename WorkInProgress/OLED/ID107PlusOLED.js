@@ -5,14 +5,20 @@ Module for the Custom OLED controller for ID107 HR Plus fitness tracker
 
 ```
 function go(){
+   //set font
+   require("Font6x12").add(Graphics);
+   g.setFont6x12();
+   //clear display 
+   g.clear();
    // write some text
-   g.drawString("Hello World!",2,2);
+   g.drawString("Hello World",0,0);
    // write to the screen
    g.flip(); 
 }
 // SPI
-SPI2.setup({mosi: B15, sck: B13});
-var g = require("ID107PlusOLED").connectSPI(SPI2, B14, B10, go, {cs: B1, pwr:D26, height: 64});
+SPI1.setup({mosi: D31,sck: D30});
+var g = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/OLED/ID107PlusOLED.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
+
 ```
 
 */
