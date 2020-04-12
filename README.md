@@ -24,3 +24,21 @@ A custom Espruino build [download](https://github.com/abhigkar/ID107-HR-Plus-Rev
 There was issue that the bootloader starts watchdog at each boot so you need to ping it from espruino or it will will reboot, so once you connect via webide you need to paste code like `setInterval(function(){poke32(0x40010600,0x6E524635);},1000)` to ping watchdog each second. otherwise you'll see periodical Espruino disconnects/reboots.
 
 You should also running this code all the time, when tracker is powered on, otherwise bootloader will remove the Espruino from the tracker the enter in DFU mode.
+
+### OLED Code
+
+
+    function go(){
+       require("Font6x12").add(Graphics);
+       g.setFont6x12();
+       g.clear();
+       // write some text
+       g.drawString("Hello World",0,0);
+       // write to the screen
+       g.flip(); 
+    }
+    // SPI
+    SPI1.setup({mosi: D31,sck: D30});
+    var g = require("ID107PlusOLED.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
+    
+    
