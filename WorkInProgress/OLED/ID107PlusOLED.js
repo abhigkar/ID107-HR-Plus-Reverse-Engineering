@@ -99,10 +99,10 @@ exports.connectSPI = function(spi, dc,  rst, callback, options) {
 		if(cs) digitalWrite(cs, 1);
 
 
-		const height= OLED_WIDTH / 8;
-		const width= OLED_HEIGHT / 8;
+		const height= C.OLED_WIDTH / 8;
+		const width= C.OLED_HEIGHT / 8;
 		const m_row = 0;
-		const m_col = OLED_HEIGHT / 2;
+		const m_col = C.OLED_HEIGHT / 2;
 
 
 		var p = 0;
