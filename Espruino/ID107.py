@@ -44,6 +44,8 @@ info = {
      'JSMODULESOURCES+=libs/js/Font8x12.min.js',
      'JSMODULESOURCES+=libs/js/Font8x16.min.js',
      'JSMODULESOURCES+=libs/js/FontDennis8.min.js',
+     'INCLUDE += -I$(ROOT)/libs/id107hp',
+     'WRAPPERSOURCES += libs/id107hp/jswrap_id107hp.c',
      'DFU_SETTINGS=--sd-req 129,136 --dev-type 572 --dev-revision 0x64' ## TODO change for ID107 HR plus
    ]
  }
@@ -71,7 +73,11 @@ chip = {
 };
 
 devices = {
-
+	'ACCEL' : {
+            'device' : 'KX022', 'addr' : 0x1e,
+            'pin_sda' : 'D3',
+            'pin_scl' : 'D5'
+          }
 };
 
 # left-right, or top-bottom order
