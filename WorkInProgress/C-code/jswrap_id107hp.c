@@ -1,5 +1,5 @@
 
-#include <jswrap_ID107hp.h>
+#include <jswrap_id107hp.h>
 #include "jsinteractive.h"
 #include "jsdevices.h"
 #include "jsnative.h"
@@ -26,13 +26,10 @@
 #include "jsi2c.h" // accelerometer/etc
 #endif
 
-#include "nmea.h"
-
 
 /*JSON{
   "type": "class",
-  "class" : "Id107hp",
-  "ifdef" : "ID107HP"
+  "class" : "Id107hp"
 }
 */
 
@@ -40,8 +37,7 @@
   "type" : "event",
   "class" : "Id107hp",
   "name" : "accel",
-  "params" : [["xyz","JsVar",""]],
-  "ifdef" : "ID107HP"
+  "params" : [["xyz","JsVar",""]]
 }
 Accelerometer data available with `{x,y,z,diff}` object as a parameter.
 
@@ -65,9 +61,7 @@ typedef struct {
 
 
 ///DATA should coming from board file
-#define ACCEL_ADDR 0x1E
-#define ACCEL_PIN_SDA
-#define ACCEL_PIN_SCL
+
 
 
 #define ACCEL_POLL_INTERVAL_MAX 5000 // in msec - DEFAULT_ACCEL_POLL_INTERVAL_MAX+TIMER_MAX must be <65535
@@ -156,15 +150,6 @@ void peripheralPollHandler() {
   // 1 -> 0x13 INS2 - what kind of event
   bool hasAccelData = (buf[1]&16)!=0; // DRDY
   int tapType = (buf[1]>>2)&3; // TDTS0/1
-  if (tapType) {
-    // report tap
-    tapInfo = buf[0] | (tapType<<6);
-    id107Tasks |= JSBT_ACCEL_TAPPED;
-    // clear the IRQ flags
-    buf[0]=0x17;
-    jsi2cWrite(&internalI2C, ACCEL_ADDR, 1, buf, true);
-    jsi2cRead(&internalI2C, ACCEL_ADDR, 1, buf, true);
-  }
   if (hasAccelData) {
     buf[0]=6;
     jsi2cWrite(&internalI2C, ACCEL_ADDR, 1, buf, true);
@@ -203,8 +188,7 @@ void peripheralPollHandler() {
     "generate" : "jswrap_id107hp_setPollInterval",
     "params" : [
       ["interval","float","Polling interval in milliseconds"]
-    ],
-    "ifdef" : "ID107HP"
+    ]
 }
 Set how often the watch should poll for new acceleration/gyro data
 */
@@ -229,8 +213,7 @@ void jswrap_id107hp_setPollInterval(JsVarFloat interval) {
     "class" : "Id107hp",
     "name" : "getAccel",
     "generate" : "jswrap_id107hp_getAccel",
-    "return" : ["JsVar","An object containing accelerometer readings (as below)"],
-    "ifdef" : "ID107HP"
+    "return" : ["JsVar","An object containing accelerometer readings (as below)"]
 }
 Get the most recent accelerometer reading. Data is in the same format as the `Id107hp.on('accel',` event.
 
@@ -359,8 +342,7 @@ bool jswrap_id107hp_idle() {
     "params" : [
       ["reg","int",""],
       ["data","int",""]
-    ],
-    "ifdef" : "ID107HP"
+    ]
 }
 Writes a register on the KX023 Accelerometer
 */
@@ -383,8 +365,7 @@ void jswrap_id107hp_accelWr(JsVarInt reg, JsVarInt data) {
     "params" : [
       ["reg","int",""]
     ],
-    "return" : ["int",""],
-    "ifdef" : "ID107HP"
+    "return" : ["int",""]
 }
 Reads a register from the KX023 Accelerometer
 */
@@ -407,8 +388,7 @@ int jswrap_id107hp_accelRd(JsVarInt reg) {
     "type" : "staticmethod",
     "class" : "Id107hp",
     "name" : "off",
-    "generate" : "jswrap_id107hp_off",
-    "ifdef" : "ID107HP"
+    "generate" : "jswrap_id107hp_off"
 }
 Turn Id107hp.js off. It can only be woken by pressing BTN1.
 */
@@ -420,3 +400,15 @@ void jswrap_id107hp_off() {
 #endif
 }
 
+
+/*JSON{
+	  "type" : "staticmethod",
+	  "class" : "Id107hp",
+	  "name" : "world",
+	  "generate" : "jswrap_id107hp_world"
+}
+A Test methos for print message
+*/
+void jswrap_id107hp_world() {
+    jsiConsolePrint("Hello World!\r\n");
+}
