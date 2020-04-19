@@ -74,9 +74,26 @@ chip = {
 
 devices = {
 	'ACCEL' : {
-            'device' : 'KX022', 'addr' : 0x1e,
+            'device' : 'KX022', 
+            'addr' : 0x1e,
             'pin_sda' : 'D3',
-            'pin_scl' : 'D5'
+            'pin_scl' : 'D5',
+#            'pin_int' : 'D6'
+          },
+  'TOUCH' : { 
+            'device' : 'IQS263', 
+            'addr' : 0x44,
+            'pin_sda' : 'D16',
+            'pin_scl' : 'D15',
+            'pin_rdy' : 'D17'
+          },
+  'HEARTRATE' : { 
+            'device' : 'SI114X', 
+            'addr' : 0x5a,
+            'pin_sda' : 'D10',
+            'pin_scl' : 'D9',
+            'pin_led' : 'D18'
+#            'pin_int' : 'D8'
           }
 };
 

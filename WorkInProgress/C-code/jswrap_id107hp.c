@@ -50,7 +50,6 @@ You can also retrieve the most recent reading with `Id107hp.getAccel()`.
  */
 
 
-
 #define ACCEL_HISTORY_LEN 50 ///< Number of samples of accelerometer history
 
 typedef struct {
@@ -58,20 +57,18 @@ typedef struct {
 } Vector3;
 
 #define DEFAULT_ACCEL_POLL_INTERVAL 80 // in msec - 12.5 to match accelerometer
-
-
-///DATA should coming from board file
-
-
-
 #define ACCEL_POLL_INTERVAL_MAX 5000 // in msec - DEFAULT_ACCEL_POLL_INTERVAL_MAX+TIMER_MAX must be <65535
-
 #define TIMER_MAX 60000 // 60 sec - enough to fit in uint16_t without overflow if we add ACCEL_POLL_INTERVAL
-/// Internal I2C used for Accelerometer/Pressure
-JshI2CInfo internalI2C;
-/// Is I2C busy? if so we'll skip one reading in our interrupt so we don't overlap
-bool i2cBusy;
-/// How often should be poll for accelerometer/compass data?
+
+
+JshI2CInfo i2cAccel; // Accelerometer
+JshI2CInfo i2cTouch; //Touch Sensor
+JshI2CInfo i2cHeartRate; //Heart Rate
+
+
+
+
+/// How often should be poll for accelerometer?
 volatile uint16_t pollInterval; // in ms
 
 /// accelerometer data
@@ -139,21 +136,20 @@ char clipi8(int x) {
 /* Scan peripherals for any data that's needed
  * Also, holding down both buttons will reboot */
 void peripheralPollHandler() {
-  if (i2cBusy) return;
   unsigned char buf[7];
   // poll KX023 accelerometer (no other way as IRQ line seems disconnected!)
   // read interrupt source data
   buf[0]=0x12; // INS1
-  jsi2cWrite(&internalI2C, ACCEL_ADDR, 1, buf, true);
-  jsi2cRead(&internalI2C, ACCEL_ADDR, 2, buf, true);
+  jsi2cWrite(&i2cAccel, ACCEL_ADDR, 1, buf, true);
+  jsi2cRead(&i2cAccel, ACCEL_ADDR, 2, buf, true);
   // 0 -> 0x12 INS1 - tap event
   // 1 -> 0x13 INS2 - what kind of event
   bool hasAccelData = (buf[1]&16)!=0; // DRDY
   int tapType = (buf[1]>>2)&3; // TDTS0/1
   if (hasAccelData) {
     buf[0]=6;
-    jsi2cWrite(&internalI2C, ACCEL_ADDR, 1, buf, true);
-    jsi2cRead(&internalI2C, ACCEL_ADDR, 6, buf, true);
+    jsi2cWrite(&i2cAccel, ACCEL_ADDR, 1, buf, true);
+    jsi2cRead(&i2cAccel, ACCEL_ADDR, 6, buf, true);
     // work out current reading in 16 bit
     short newx = (buf[1]<<8)|buf[0];
     short newy = (buf[3]<<8)|buf[2];
@@ -242,15 +238,14 @@ JsVar *jswrap_id107hp_getAccel() {
 void jswrap_id107hp_init() {
 #ifndef EMSCRIPTEN
   // Set up I2C
-  i2cBusy = true;
-  jshI2CInitInfo(&internalI2C);
-  internalI2C.bitrate = 0x7FFFFFFF; // make it as fast as we can go
-  internalI2C.pinSDA = ACCEL_PIN_SDA;
-  internalI2C.pinSCL = ACCEL_PIN_SCL;
-  jshPinSetValue(internalI2C.pinSCL, 1);
-  jshPinSetState(internalI2C.pinSCL, JSHPINSTATE_GPIO_OUT_OPENDRAIN_PULLUP);
-  jshPinSetValue(internalI2C.pinSDA, 1);
-  jshPinSetState(internalI2C.pinSDA, JSHPINSTATE_GPIO_OUT_OPENDRAIN_PULLUP);
+  jshI2CInitInfo(&i2cAccel);
+  i2cAccel.bitrate = 0x7FFFFFFF; // make it as fast as we can go
+  i2cAccel.pinSDA = ACCEL_PIN_SDA;
+  i2cAccel.pinSCL = ACCEL_PIN_SCL;
+  jshPinSetValue(i2cAccel.pinSCL, 1);
+  jshPinSetState(i2cAccel.pinSCL, JSHPINSTATE_GPIO_OUT_OPENDRAIN_PULLUP);
+  jshPinSetValue(i2cAccel.pinSDA, 1);
+  jshPinSetState(i2cAccel.pinSDA, JSHPINSTATE_GPIO_OUT_OPENDRAIN_PULLUP);
   jshDelayMicroseconds(10000);
 #endif
   id107Flags = JSBF_DEFAULT;
@@ -284,7 +279,6 @@ void jswrap_id107hp_init() {
   jswrap_id107hp_accelWr(0x18,0b11101100);  // CNTL1 On, high power, DRDYE=1, 4g range, TDTE (tap enable)=1, Wakeup=0, Tilt=0
 #endif
 
-  i2cBusy = false;
   // Other IO
 #ifndef EMSCRIPTEN
   // Add watchdog timer to ensure watch always stays usable (hopefully!)
@@ -351,9 +345,7 @@ void jswrap_id107hp_accelWr(JsVarInt reg, JsVarInt data) {
   unsigned char buf[2];
   buf[0] = (unsigned char)reg;
   buf[1] = (unsigned char)data;
-  i2cBusy = true;
-  jsi2cWrite(&internalI2C, ACCEL_ADDR, 2, buf, true);
-  i2cBusy = false;
+  jsi2cWrite(&i2cAccel, ACCEL_ADDR, 2, buf, true);
 #endif
 }
 
@@ -373,10 +365,8 @@ int jswrap_id107hp_accelRd(JsVarInt reg) {
 #ifndef EMSCRIPTEN
   unsigned char buf[1];
   buf[0] = (unsigned char)reg;
-  i2cBusy = true;
-  jsi2cWrite(&internalI2C, ACCEL_ADDR, 1, buf, true);
-  jsi2cRead(&internalI2C, ACCEL_ADDR, 1, buf, true);
-  i2cBusy = false;
+  jsi2cWrite(&i2cAccel, ACCEL_ADDR, 1, buf, true);
+  jsi2cRead(&i2cAccel, ACCEL_ADDR, 1, buf, true);
   return buf[0];
 #else
   return 0;
