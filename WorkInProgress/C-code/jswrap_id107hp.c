@@ -402,3 +402,132 @@ A Test methos for print message
 void jswrap_id107hp_world() {
     jsiConsolePrint("Hello World!\r\n");
 }
+
+////////////////////////////////////////////////////////////
+//Section for Si114x
+///////////////////////////////////////////////////////////
+
+/*JSON{
+    "type" : "staticmethod",
+    "class" : "Id107hp",
+    "name" : "heartWrParm",
+    "generate" : "jswrap_id107hp_heartWrParm",
+    "params" : [
+      ["reg","int",""],
+      ["data","int",""]
+    ]
+}
+Writes a Parm on the Si14x heart Rate sensor
+*/
+void jswrap_id107hp_heartWrParm(JsVarInt reg, JsVarInt data) {
+  unsigned char buf[3];
+  buf[0] = (unsigned char)0x17;
+  buf[1] = (unsigned char)data;
+  buf[2] = (unsigned char)(0xA0 | reg);
+  jsi2cWrite(&i2cHeartRate, HEARTRATE_ADDR, 3, buf, true);
+}
+
+/*JSON{
+    "type" : "staticmethod",
+    "class" : "Id107hp",
+    "name" : "heartRdParm",
+    "generate" : "jswrap_id107hp_heartRdParm",
+    "params" : [
+      ["reg","int",""]
+    ],
+    "return" : ["int",""]
+}
+Reads a Parm from the Si14x heart Rate sensor
+*/
+int jswrap_id107hp_heartRdParm(JsVarInt reg) {
+  unsigned char buf[2];
+  buf[0] = (unsigned char)0x18;
+  buf[1] = (unsigned char)(0x80 | reg);
+  jsi2cWrite(&i2cHeartRate, HEARTRATE_ADDR, 1, buf, true);
+  return jswrap_id107hp_heartRd( 0x2E);
+}
+
+
+/*JSON{
+    "type" : "staticmethod",
+    "class" : "Id107hp",
+    "name" : "heartWr",
+    "generate" : "jswrap_id107hp_heartWr",
+    "params" : [
+      ["reg","int",""],
+      ["data","int",""]
+    ]
+}
+Writes a register on the Si14x heart Rate sensor
+*/
+void jswrap_id107hp_heartWr(JsVarInt reg, JsVarInt data) {
+  unsigned char buf[2];
+  buf[0] = (unsigned char)reg;
+  buf[1] = (unsigned char)data;
+  jsi2cWrite(&i2cHeartRate, HEARTRATE_ADDR, 2, buf, true);
+}
+
+/*JSON{
+    "type" : "staticmethod",
+    "class" : "Id107hp",
+    "name" : "heartRd",
+    "generate" : "jswrap_id107hp_heartRd",
+    "params" : [
+      ["reg","int",""]
+    ],
+    "return" : ["int",""]
+}
+Reads a register from the Si14x heart Rate sensor
+*/
+int jswrap_id107hp_heartRd(JsVarInt reg) {
+  unsigned char buf[1];
+  buf[0] = (unsigned char)reg;
+  jsi2cWrite(&i2cHeartRate, HEARTRATE_ADDR, 1, buf, true);
+  jsi2cRead(&i2cHeartRate, HEARTRATE_ADDR, 1, buf, true);
+  return buf[0];
+}
+
+
+
+/*JSON{
+	  "type" : "staticmethod",
+	  "class" : "Id107hp",
+	  "name" : "initHeartRate",
+	  "generate" : "jswrap_id107hp_init_heart"
+}
+Init methof for Si114x Heart Rate sensor
+*/
+void jswrap_id107hp_init_heart() {
+  jswrap_id107hp_heartWr(0x07, 0x17);
+  // jswrap_id107hp_heartWr(0x18, PulsePlug::RESET_Cmd);
+
+  //throw exception if device not found
+  Serial.print("PART: ");
+  Serial.print(pulse.getReg(PulsePlug::PART_ID));
+  Serial.print(" REV: ");
+  Serial.print(pulse.getReg(PulsePlug::REV_ID));
+  Serial.print(" SEQ: ");
+  Serial.println(pulse.getReg(PulsePlug::SEQ_ID));
+
+
+
+  jswrap_id107hp_heartWr(0x03, 0x03);       // turn on interrupts
+  jswrap_id107hp_heartWr(0x04, 0x0F);    // turn on interrupt on PS12 JJ
+  jswrap_id107hp_heartWr(0x05, 0x0F);     // interrupt on ps2 AND PS1 measurement
+  jswrap_id107hp_heartWr(0x08, 0x84);     // see datasheet -- every 10ms
+  jswrap_id107hp_heartWr(0x09, 0x08);      // see datasheet ---- one measurement
+  jswrap_id107hp_heartWr(0x0A, 0x08);       // see datasheet --every time the device wakes up
+  jswrap_id107hp_heartWr(0x10, 0x02);
+  jswrap_id107hp_heartWr(0x0F, 0x00);      // this powers off the green leds of the ID107HR
+  //Serial.println(pulse.getReg(PulsePlug::PS_LED21), BIN);
+  //Serial.print("CHLIST = ");
+  //Serial.println(pulse.readParam(0x01), BIN);
+  pulse.writeParam(0x01, 0x77);         // all measurements on
+  pulse.writeParam(0x0B, 0x00);
+  pulse.writeParam(0x02, 0x21);  // 21 = LED 2 & LED 1 (red) resp.
+  pulse.writeParam(0x07, 0x03);      // PS1 photodiode select
+  pulse.writeParam(0x08, 0x03);      // PS2 photodiode select
+  pulse.writeParam(0x09, 0x03);      // PS3 photodiode select
+  pulse.writeParam(0x0A, 0b01110000);    // B01110000 is default
+  pulse.setReg(0x18,0b00001111);     // starts an autonomous read loop
+}
