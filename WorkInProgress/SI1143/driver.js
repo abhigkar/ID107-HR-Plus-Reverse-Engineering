@@ -1,7 +1,7 @@
 var pins= [2,4,6,7,8,11,12,12,14,18,21,23,24,27,28,29]
 
 pins.forEach((p)=>{digitalWrite(p,1);})
-
+//https://github.com/goran-mahovlic/openwatch/blob/master/ID107HR_Plus/Arduino/libraries/SI114x/SI114x.cpp
 const regParams = {
     PART_ID:0x00, REV_ID:0x01, SEQ_ID:0x02, INT_CFG: 0x03,
     IRQ_ENABLE:0x04, IRQ_MODE1: 0x05, IRQ_MODE2:0x06, HW_KEY:0x07,

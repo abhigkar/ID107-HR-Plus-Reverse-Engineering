@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 Sam Sykes, Gordon Williams, Jonathan Richards.
+/* Copyright (c) 2020 Abhinav Golwalkar 'abhinav.golwalkar@gmail.com'.
    See the file LICENSE for copying permission. */
 /* 
 Module for the Custom OLED controller for ID107 HR Plus fitness tracker

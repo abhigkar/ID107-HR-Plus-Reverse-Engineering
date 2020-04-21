@@ -1,3 +1,4 @@
+//https://github.com/scientistnobee/Tubiditysensor/blob/master/Si1143_gain
 var MODE_CHANGE = 0x80;    // a pin mode was changed
 var DIG_CHANGE  = 0x40;   // a digital output was changed
 var PWM_CHANGE  = 0x30;   // an analog (pwm) value was changed on port 2..3

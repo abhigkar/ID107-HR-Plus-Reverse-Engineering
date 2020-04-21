@@ -5,7 +5,7 @@
 //var acc = require("https://github.com/allmackey/espruino/blob/master/KX022.js").connectI2C(i2c);
 //print(acc.read()); // prints { x: ..., y: ..., z: ... }
 
-var a =  0x1F;   //0x1E(scanned)
+var a =  0x1E;   //0x1E(scanned)
 var REG = { 
     WHO_AM_I: 0x0F,
     OUTX_L: 0x06,

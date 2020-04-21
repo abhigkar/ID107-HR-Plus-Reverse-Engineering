@@ -43,12 +43,98 @@ var RESEED_BLOCK = 0x00;
 var HALT_TIME = 0x00;
 var I2C_TIMEOUT = 0x04;
 
+
+function i2cWrite(data){
+  i2c.writeTo(IQS263_ADD, data);
+}
+
+function i2cRead(addr, len){
+  i2c.writeTo({address:IQS263_ADD, stop:false}, addr);
+  return i2c.readFrom(IQS263_ADD, len);
+}
+
 function Init_IQS263(){
 
+  /*....................READING SYSTEM FLAGS..........................*/
+  while(digitalRead(rdyPin)){} 
+  var buf = i2cRead(SYS_FLAGS,2);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
 
+  /*....................READING DEVICE INFO..........................*/
+  while(digitalRead(rdyPin)){} 
+  buf = i2cRead(DEVICE_INFO,2);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
+  /*....................READING ACTIVE CHANNELS..........................*/
+  while(digitalRead(rdyPin)){} 
+  buf = i2cRead(ACTIVE_CHANNELS,1);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
+  /*....................READING THRESHOLDS..........................*/
+  while(digitalRead(rdyPin)){} 
+  buf = i2cRead(THRESHOLDS,8);
+
+  /*....................WRITING THRESHOLDS..........................*/
+  buf[0] =THRESHOLDS;
+  buf[1]= PROX_THRESHOLD	  ; //0x10
+	buf[2]= TOUCH_THRESHOLD  ;
+	buf[3]= TOUCH_THRESHOLD_CH1  ; //0x20
+	buf[4]= TOUCH_THRESHOLD_CH2  ; //0x20
+	buf[5]= TOUCH_THRESHOLD_CH3  ; //
+	buf[6]= 14  ; //
+	buf[7]= HALT_TIME ;
+	buf[8]=250;
+  while(digitalRead(rdyPin)){} 
+  i2cWrite(buf);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
+  /*....................READING THRESHOLDS..........................*/
+  while(digitalRead(rdyPin)){} 
+  buf = i2cRead(THRESHOLDS,8);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
+  /*....................READING PROXI SETTING..........................*/
+  while(digitalRead(rdyPin)){} 
+  buf = i2cRead(PROX_SETTINGS,5);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
+  /*....................WRITING PROXI SETTING..........................*/
+  buf[0]=0;
+  buf[2]=8;
+  while(digitalRead(rdyPin)){} 
+  i2cWrite(PROX_SETTINGS, buf);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
 }
-function Monotor_Touch_IQS263()
-function IQS263_READ_TOUCH_Events()
+
+function IQS263_READ_TOUCH_Events(){
+  while(digitalRead(rdyPin)){} 
+  buf = i2cRead(TOUCH_BYTES,1);
+  print('>> ', buf[0]&0x02);
+  print('>> ', buf[0]&0x04);
+  print('>> ', buf[0]&0x08);
+  while(digitalRead(rdyPin)){} 
+  while(!digitalRead(rdyPin)){} 
+}
+
+var rdyPin = new Pin(17);
+var sdaPin = D16;
+var slcPin = D15;
+var i2c = new I2C();
+
+rdyPin.mode("input");
+i2c.setup({scl:slcPin,sda:sdaPin});
+Init_IQS263();
+
+print("Init OK");
+var counter =0;
+var intVal = setInterval(()=>{
+if(counter > 60) clearInterval(intVal);
+IQS263_READ_TOUCH_Events();
+counter++;
+},1000);
+
 
 /*
 var rdyPin = new Pin(17);

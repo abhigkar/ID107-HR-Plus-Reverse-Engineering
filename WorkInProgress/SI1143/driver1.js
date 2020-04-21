@@ -124,7 +124,7 @@ function bias(){
         write_reg(regAddress.COMMAND,ramAddress.PS_FORCE_cmd);
     }
 }
-
+/*
 void bias(void){  // Bias during start up
   
     for (int i=0; i<20; i++){
@@ -146,7 +146,7 @@ void bias(void){  // Bias during start up
     
       bias3 += ((HighB << 8) | LowB) / 20;
    }
-
+*/
 function setup(){
     write_reg(regAddress.HW_KEY, 0x17); // Setting up LED Power to full
     write_reg(regAddress.PS_LED21,0xFF);
@@ -172,7 +172,68 @@ function readHR() { // return promiss
  }
 
 // calcHR();
+let minmaxSpot = 0;
+let minmaxArray = new Array(20);
+let avgsize = 20, maxgraph, mingraph,HRrange, pulsemax, pulsehigh = 0, pulselow = 0, lastBeat = 0;
+let pulsetreshigh = 0.6;
+let pulsetreslow  = 0.3;
+let pulsetrestohigh  = 1500;
+let rateSpot = 0,RATE_SIZE = 4; 
+
+function calcHR(rawHR){
+  minmaxArray[minmaxSpot++] = rawHR; //Store this reading in the array
+  minmaxSpot %= avgsize; //Wrap variable
+  maxgraph = 1;  
+  mingraph = 100000;
+  for(let ArrayPos=1; ArrayPos<(avgsize-1); ArrayPos++) {
+    if (maxgraph<minmaxArray[ArrayPos]) {
+        maxgraph = minmaxArray[ArrayPos];
+    } 
+    if ((mingraph>minmaxArray[ArrayPos]) && (minmaxArray
+      [ArrayPos]>100)) {
+       mingraph = minmaxArray[ArrayPos];
+    } 
+  }
+  HRrange=(maxgraph-mingraph);
+  result=(rawHR-(maxgraph-HRrange));
+  if (pulsemax<result){pulsemax=result;} 
+  if ((pulsemax>(HRrange*pulsetreshigh))&&(HRrange>100)){pulsehigh =1;} 
+  if (pulsemax>pulsetrestohigh){pulsehigh=0;} 
+  if (result<(HRrange*pulsetreslow)){pulsemax=0;}
+  if((pulselow==1)&&(result>((HRrange*pulsetreshigh)))){pulselow=0;}
+  if ((pulsehigh==1)&&(result<(HRrange*pulsetreslow)&&(pulselow==0))){
+    pulselow=1; pulsehigh=0; pulsemax=0; 
+    let deltaHR = getTime() - lastBeat;
+    lastBeat = getTime();
+    beatsPerMinute = 60 / (deltaHR / 1000.0);
+    //Serial.println(beatsPerMinute);
+
+    if (beatsPerMinute < 180 && beatsPerMinute > 50) {
+      rates[rateSpot++] = beatsPerMinute; //Store this reading in the array
+      rateSpot %= RATE_SIZE; //Wrap variable
+
+      //Take average of readings
+      beatAvg = 0;
+      for (var x = 0 ; x < RATE_SIZE ; x++){
+        beatAvg += rates[x]; 
+      }
+      beatAvg /= RATE_SIZE;
+      console.log(beatAvg);
+    }
+  }
+}
+
 setup();
-readHR().then(function(done) {
+
+var count = 0;
+D18.set();
+var intVal = setInterval(()=>{
+ if(count>30) {
+    clearInterval(intVal);
+    D18.reset();
+ }
+  readHR().then(function(done) {
     console.log(done); // --> 'done!'
   });
+count++;
+},200);

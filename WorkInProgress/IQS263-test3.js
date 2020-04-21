@@ -11,27 +11,37 @@ var SYSFLAGS0 = 0x01;
 var PROXSETTTINGS = 0x09;
 
 function read(reg, len){
-    i2c.writeTo(i2cAddr, reg);
+    i2c.writeTo({address:i2cAddr, stop:false}, reg);
     return i2c.readFrom(i2cAddr,len);
 }
 
-function write(reg, val){
-    i2c.writeTo(i2cAddr, [reg , val]);
+function write(val){
+    i2c.writeTo(i2cAddr,val);
 }
 
-function forceCommunication(cb){
-    rdyPin.mode("output");
-    setTimeout(()=>{
-        digitalWrite(rdyPin,0);
-    },10);
-   
- }
+function forceCommunication(){
+    var promise = new Promise(function(resolve, reject) {
+        setTimeout(()=>{
+            rdyPin.mode("output");
+            digitalWrite(rdyPin,0);
+            setTimeout(function() {
+                resolve('done!');
+              });
+        },10);    
+    });
+    return promise;
+}
 
 function eventTriggred(){
-    forceCommunication();
-    var data = read(SYSFLAGS0, 2);
-    console.log(data[0]);
-    watchId = setWatch(eventTriggred, rdyPin, {repeat: false, edge: 'falling',debounce:10 });
+    forceCommunication().then(function(done) {
+        var data = read(SYSFLAGS0, 2);
+            console.log(data[1]);
+        //setTimeout(()=>{
+          //watchId = setWatch(eventTriggred, rdyPin, {repeat: false, edge: 'falling',debounce:0 });
+       // },500);
+        
+    });
+    
 }
 function setProjectionMode(){
     i2c.writeTo(i2cAddr, [SYSFLAGS0,0x00]);
@@ -42,7 +52,9 @@ function writeProxySettings(){
 }
 
 function lowPowerMode(){
-    forceCommunication();
+    forceCommunication().then(function(done) {
+        console.log(done); // --> 'done!'
+      });;
 }
 
 function setActiveChannel(){
@@ -69,7 +81,7 @@ function setATITargets(){
     let ATI_TARGET_TOUCH = 0x30;
     let ATI_TARGET_PROX = 0x40;
     let TIMINGS_AND_TARGETS = 0x0B;
-    i2c.writeTo(i2cAddr, [THRESHOLDS,TIMINGS_AND_TARGETS,ATI_TARGET_TOUCH, ATI_TARGET_PROX ]);
+    i2c.writeTo(i2cAddr, [TIMINGS_AND_TARGETS,ATI_TARGET_TOUCH, ATI_TARGET_PROX ]);
 }
 
 function MultiChanalBaseValue(){
@@ -116,7 +128,7 @@ function SetGestureTimers(){
 var watchId;
 function init(){
     rdyPin.mode("input");
-    watchId = setWatch(eventTriggred, rdyPin, {repeat: false, edge: 'falling',debounce:10 });
+    watchId = setWatch(eventTriggred, rdyPin, {repeat: false, edge: 'falling',debounce:0 });
     setProjectionMode();
     writeProxySettings();
     setActiveChannel();
@@ -127,6 +139,8 @@ function init(){
     SetTimings();
 }
 
-var i2c = new I2C();
-i2c.setup({scl:slcPin,sda:sdaPin});
-init();
+ var i2c = new I2C();
+forceCommunication().then(function(done) {
+    init();
+  });
+

@@ -74,3 +74,57 @@ const pinScan2 = (sda) => {
     scanI2C(sda, b);
   }, 500);
 }
+
+
+function watchFun(e){print(e.state);}
+setWatch(watchFun, D17, {repeat: true, edge: 'falling' });
+
+
+var countWatch=0;
+var initWatch = setWatch(function(e) { 
+  // watchdog to prevent runaway
+  if( countWatch >= 3 ) clearWatch(initWatch);
+print(e);
+  countWatch++;
+  }, D17, { repeat:true, edge:'falling',data:D17  }
+);
+
+var img = {
+  width : 42, height : 32, bpp : 1,
+  buffer : require("heatshrink").decompress(atob("AB8B/0H/AEB//n/+AgH/AAPwgF/AgP+gEfBQWAh4PDgYEC/gZD/8An4EC4AUPFIkHAgXgHwokCDIIPCIYIPDAgIfCLAIvC4AKBLIIjBgA/BEYIaCAgcfO4IABgYtBAAU+AgcGS5g"))
+};
+var x,y;
+function go(){
+ //clear display 
+   g.clear();
+   x = g.getWidth()/2-21;
+   y = g.getHeight()/2-16;
+   g.setRotation(2);
+   // write some text
+   g.drawImage(img,x,y);
+   // write to the screen
+   g.flip(); 
+}
+// SPI
+SPI1.setup({mosi: D31,sck: D30});
+var g = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/OLED/ID107PlusOLED.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
+
+let sz = 1;
+
+setInterval(()=>{
+  sz = (sz==1)?1.1:1;
+ g.clear();
+   // write some text
+   g.drawImage(img,x,y, {scale:sz});
+   // write to the screen
+   g.flip(); 
+},200);
+
+
+
+var prevRead = analogRead(D29);
+var intVal = setInterval(()=>{
+    let read = analogRead(D29);
+    console.log('diff ',(prevRead -read),'current read ', read);
+    prevRead = read;
+},2000);
