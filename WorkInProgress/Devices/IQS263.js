@@ -27,8 +27,8 @@ var doInitialSetup;
 var homePressed;
 var homeTimeout;
 function IQS263(options,r,w) {
-    this.read = read;
-    this.write = write;
+    this.read = r;
+    this.write = w;
 }
 function readEvents(){
     while(digitalRead(rdyPin)); // detect comm window
