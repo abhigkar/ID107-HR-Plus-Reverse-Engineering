@@ -27,6 +27,7 @@ var doInitialSetup;
 var homePressed;
 var homeTimeout;
 var read, write;
+var self;
 function IQS263(options,r,w) {
     read = r;
     write = w;
@@ -42,25 +43,25 @@ function readEvents(){
     (buf[0] &0x80) ? (showReset = true) : (showReset = false);
 
     let td = buf2[0] & 0xE;
-    if((td<< 0x1E) < 0 ) IQS263.emit('touch',{chn:1});
-    if((td<< 0x1D) < 0 ) IQS263.emit('touch',{chn:2});
+    if((td<< 0x1E) < 0 ) self.emit('touch',{chn:1});
+    if((td<< 0x1D) < 0 ) self.emit('touch',{chn:2});
     if((td<< 0x1C) < 0 ) {//home touch
       homePressed = true;
-      IQS263.emit('touch',{chn:3});
+      self.emit('touch',{chn:3});
       homeTimeout = setTimeout(()=>{
         if(homePressed) homePressed = false;
         homeTimeout = 0;
-        IQS263.emit('longhome',null);
+        self.emit('longhome',null);
       },5000);
     }
-  else{
-    homePressed = false;
-    clearTimeout(homeTimeout);
-    homeTimeout=0;
-    
-  }
-    if(buf[1] &  0x80)  IQS263.emit('flick',{dir:'left'});
-    if(buf[1] &  0x40)  IQS263.emit('flick',{dir:'right'});
+    else{
+        homePressed = false;
+        if(homeTimeout)clearTimeout(homeTimeout);
+        homeTimeout=0;
+        
+    }
+    if(buf[1] &  0x80)  self.emit('flick',{dir:'left'});
+    if(buf[1] &  0x40)  self.emit('flick',{dir:'right'});
     return true;
 } 
 function handleInterrupt(e){
@@ -129,6 +130,7 @@ function init_setup(){
 return promise;
 }
 IQS263.prototype.init = function() {
+    self = this;
     event_handshake();
     init_setup().then(()=>{
         irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'both',debounce:0 });
