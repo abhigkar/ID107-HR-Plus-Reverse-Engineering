@@ -37,7 +37,6 @@ function readEvents(){
     if(buf[1] ==0 || buf[1] ==1) return false; // no data return
     while(digitalRead(rdyPin));// detect comm window
     buf2 = read(0x03,2);// touch 
-    event.touchData.d1 = buf2[0];event.touchData.d2 = buf2[1];
     while(digitalRead(rdyPin));// detect comm window
     buf3 = read(0x02,3); //coordinates
     (buf[0] &0x80) ? (showReset = true) : (showReset = false);
