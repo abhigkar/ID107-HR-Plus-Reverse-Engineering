@@ -26,19 +26,20 @@ var showReset;
 var doInitialSetup;
 var homePressed;
 var homeTimeout;
+var read, write;
 function IQS263(options,r,w) {
-    this.read = r;
-    this.write = w;
+    read = r;
+    write = w;
 }
 function readEvents(){
     while(digitalRead(rdyPin)); // detect comm window
-    buf = this.read(0x01,2);// events
+    buf = read(0x01,2);// events
     if(buf[1] ==0 || buf[1] ==1) return false; // no data return
     while(digitalRead(rdyPin));// detect comm window
-    buf2 = this.read(0x03,2);// touch 
+    buf2 = read(0x03,2);// touch 
     event.touchData.d1 = buf2[0];event.touchData.d2 = buf2[1];
     while(digitalRead(rdyPin));// detect comm window
-    buf3 = this.read(0x02,3); //coordinates
+    buf3 = read(0x02,3); //coordinates
     (buf[0] &0x80) ? (showReset = true) : (showReset = false);
 
     let td = buf2[0] & 0xE;
@@ -85,7 +86,7 @@ function handleInterrupt(e){
 }
 function event_handshake(){
     forceCommunication().then(()=>{
-        this.write([0x09, 0x00, (0x15|0x40)]);
+        write([0x09, 0x00, (0x15|0x40)]);
     });
 }
 function forceCommunication(){
@@ -103,20 +104,20 @@ function forceCommunication(){
 }
 function init_setup(){
     var promise = new Promise(function(resolve, reject) {
-        this.read(0x00,2);// read device info
-        this.write([0x01, 0x00]);  //set in projection mode**
-        this.write([0x09,0x00,0x15,0x00,0x00,0xc6]);
-        this.write([0x0D,0x0f]);
-        this.write([0x0A,0x15,0x15,0x10,0x08,0x00,0x14,0x04]);
-        this.write([0x0B,0x02,0x40,0x80]);
-        this.write([0x0C,0x0A,0x14,0x38]);
-        this.write([0x09,0x10]);
-        this.write([0x09,0x00,0x55,0x00,0x00,0xc6]);
+        read(0x00,2);// read device info
+        write([0x01, 0x00]);  //set in projection mode**
+        write([0x09,0x00,0x15,0x00,0x00,0xc6]);
+        write([0x0D,0x0f]);
+        write([0x0A,0x15,0x15,0x10,0x08,0x00,0x14,0x04]);
+        write([0x0B,0x02,0x40,0x80]);
+        write([0x0C,0x0A,0x14,0x38]);
+        write([0x09,0x10]);
+        write([0x09,0x00,0x55,0x00,0x00,0xc6]);
         var timeoutCount=10;
         var buff;
         do {
             while(digitalRead(rdyPin));
-            buff = this.read(0x09,1);
+            buff = read(0x09,1);
         }
         while ((buff[0] & 0b00000100) && (timeoutCount-- > 0) );
         if (buff[0] & 0b00000100)
