@@ -10,8 +10,9 @@ https://gitter.im/nRF51822-Arduino-Mbed-smart-watch/Lobby
 */
 //Espruino code
 //var i2c = new I2C();
-//i2c.setup({ scl : D30, sda: D31 });
-//var iqs263 = require("https://github.com/allmackey/espruino/blob/master/KX022.js").connectI2C(i2c);
+//i2c.setup({ scl : D15, sda: D16 });
+//var iqs263 = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/Devices/IQS263.js").connectI2C(i2c);
+//iqs263.init();
 /*
 iqs263.on('longhome',()=>{console.log('home pressed for a long time');});
 iqs263.on('slide',(data)=>{});
