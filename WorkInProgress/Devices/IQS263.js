@@ -153,7 +153,7 @@ exports.connectI2C = function(i2c, options) {
     return (new IQS263(options, function(reg, len) { // read
         i2c.writeTo({address:a, stop:false}, reg);
         return i2c.readFrom(a,len);
-    }, function(reg, data) { // write
-        i2c.writeTo(i2cAddr, data);
+    }, function(data) { // write
+        i2c.writeTo(a, data);
     }));
 };
