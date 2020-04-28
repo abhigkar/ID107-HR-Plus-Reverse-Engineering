@@ -134,11 +134,17 @@ exports.connectSPI = function(spi, dc,  rst, callback, options) {
     // set off
     oled.off = function() { 
       if (pwr) pwr.reset();
+	  if (cs) cs.reset();
+      spi.write(0xAE,dc);
+      if (cs) cs.set();
     };
 
     // set on
     oled.on = function() { 
       if (pwr) pwr.set();
+      if (cs) cs.reset();
+      spi.write(0xAF,dc);
+      if (cs) cs.set();
     };
     
     // return graphics
