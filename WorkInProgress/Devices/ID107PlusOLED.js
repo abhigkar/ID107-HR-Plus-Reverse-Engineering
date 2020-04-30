@@ -9,7 +9,8 @@ function go(){
    require("Font6x12").add(Graphics);
    g.setFont6x12();
    //clear display 
-   g.clear();
+   g.clear(); 
+   g.setRotation(2);
    // write some text
    g.drawString("Hello World",0,0);
    // write to the screen
@@ -17,7 +18,7 @@ function go(){
 }
 // SPI
 SPI1.setup({mosi: D31,sck: D30});
-var g = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/OLED/ID107PlusOLED.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
+var g = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/Devices/ID107PlusOLED.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
 
 ```
 
