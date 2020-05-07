@@ -55,7 +55,7 @@ var initCmds = new Uint8Array([
                 0x40,
                 0xA4,//DISPLAYALLON_RESUME 
                 0xA6,//NORMALDISPLAY
-                0x2,//DEACTIVATESCROLL
+                0x2E,//DEACTIVATESCROLL
                 0xAF//DISPLAYON 
   ]);
 
