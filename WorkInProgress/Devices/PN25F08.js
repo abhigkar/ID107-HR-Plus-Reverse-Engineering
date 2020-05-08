@@ -121,7 +121,6 @@ function PN25F08(spi, csPin) {
     // gets chips's JEDEC information
     this.command([0x9f, 0, 0, 0]);
     var res = {};
-    this.read(); //first dummy read
     res.manufacturerId = this.read();
     res.cap = this.read()* 16384;
     res.deviceId = this.read();
