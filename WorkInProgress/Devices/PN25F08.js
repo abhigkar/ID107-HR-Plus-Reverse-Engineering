@@ -13,6 +13,19 @@ https://github.com/abhigkar/ID107-HR-Plus-Reverse-Engineering
 SPI Flash is PN25F08B. Chip seems to be functionally identical with many of the more common Winbond W25 ones.
 
 Datasheet, http://www.xtxtech.com/upfile/2016082517095182.pdf
+
+
+Examples:
+
+const spi = new SPI();
+spi.setup({ sck: D30, miso: D27, mosi: D31, mode:3});
+
+var p25 = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/Devices/PN25F08.js");
+var myflash = new p25(spi, D28);
+console.log(myflash.getJedec().manufacturerId);
+console.log(myflash.getJedec().cap);
+console.log(myflash.getJedec().deviceId);
+
 */
 
 function PN25F08(spi, csPin) {
