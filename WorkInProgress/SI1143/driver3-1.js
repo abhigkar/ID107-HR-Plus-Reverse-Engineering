@@ -58,13 +58,8 @@ function writeParam(addr, val){
 
 function fetchALSData(){
     i2c.writeTo(i2cAddr, ALS_VIS_DATA0);
-    var data =  i2c.readFrom(i2cAddr,4);
-    var als_data = {};
-    als_data[0] = data[0];
-    als_data[1] = (data[1] <<8 );
-    als_data[2] = data[2];
-    als_data[3] = (data[2] <<8 );
-    return als_data;
+    var data =  new Int16Array(i2c.readFrom(i2cAddr,4).buffer);
+    return data;
 }
 
 
@@ -93,16 +88,12 @@ function readValues(nTimes){
   var count = 0;
     var intId = setInterval(()=> {
       if(count >nTimes) clearInterval(intId);
+      let data = fetchALSData();
+      l("test_vis ", data[0]);
+      l("test_ir ", data[1]);
 
-      var test_vis =getReg(ALS_VIS_DATA0)+256*getReg(ALS_VIS_DATA1);
-      var test_ir =getReg(ALS_IR_DATA0)+256*getReg(ALS_IR_DATA1);
-
-      l(test_vis);
-      l(test_ir);
-        
       count++;
     },500);
-    l('Interval ',intId);
 }
 
 var i2c = new I2C();
