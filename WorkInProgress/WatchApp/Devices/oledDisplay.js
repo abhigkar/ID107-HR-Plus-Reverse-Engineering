@@ -97,7 +97,7 @@ exports.connectSPI = function(spi, dc,  rst, callback, options) {
 	// set contrast, 0..255
 	oled.setContrast = function(c) { 
 		if (cs) cs.reset();
-		spi.write(0x81,c,dc);
+		spi.write([0x81,c],dc);
 		if (cs) cs.set();
 	};
 

@@ -28,21 +28,60 @@ var event = {
 };
 
 function readEvents(){
-    let timeout = 400;
-    //while(digitalRead(rdyPin));
     while(digitalRead(rdyPin));
-  
-    buf = read(0x01,2);
-   console.log(buf[1]);
-   while(digitalRead(rdyPin));
-    //while(digitalRead(rdyPin));
-    buf = read(0x02,3);
+    buf = read(0x01,2);// events
+    while(digitalRead(rdyPin));
+    buf2 = read(0x03,2);// touch 
+    while(digitalRead(rdyPin));
+    buf3 = read(0x02,3); //coordinates
     console.log(buf);
+
+    if(buf[1] & 0x01) event.prox = true; else  event.prox = false;
+    if(buf[1] & 0x02) event.touch  = true; else  event.touch  = false;
+    if(buf[1] & 0x20) event.tap  = true; else  event.tap = false;
+    if(buf[1] & 0x40) event.flickLeft  = true; else  event.flickLeft  = false;
+    if(buf[1] & 0x80) event.flickRight  = true; else  event.flickRight  = false;
+    if(buf[1] & 0x04) event.slide  = true; else  event.slide  = false;
+
+    if(event.touch){
+        touch0 = buf2[0];
+        if(touch0!=0){
+        if (touch0 & 0x02)                  // If a touch event occurs on Channel 1
+        {
+           console.log("Touch event 1 ON");  
+        }
+        else
+        {
+            console.log("Touch event 1 OFF");  
+        }
+
+        /* CHANNEL 2 */
+        if (touch0 & 0x04)                    // If a touch event occurs on Channel 2
+        {
+            console.log("Touch event 2 ON");  
+        }
+        else
+        {
+           console.log("Touch event 2 OFF");  
+        }
+
+        /* CHANNEL 3 */
+        if (touch0 & 0x08)                   // If a touch event occurs on Channel 3
+        {
+            console.log("Touch event 3 ON");  
+        }
+        else
+        {
+           console.log("Touch event 3 OFF"); 
+        }
+        }
+    }
+
     return true;
 } 
 
 function handleInterrupt(){
-  poke32(0x40010600,0x6E524635);
+    poke32(0x40010600,0x6E524635);
     if (doInitialSetup) {
 		if(!init_setup()){
         }
@@ -51,9 +90,6 @@ function handleInterrupt(){
 	}
     if(!readEvents()){
         return;
-    }
-    if(showReset){
-        doInitialSetup = true;
     }
     if(event.slide){
         console.log(event);
@@ -72,7 +108,7 @@ function flickLeft(){}
 function init_setup(){
     read(0x00,2);// read device info
     write([0x01, 0x00]);  //set in projection mode
-    write([0x0D,0x0f]);
+    write([0x0D,0x0f]); // all ch on CH0,CH1,CH2,CH3
     write([0x0A,0x10,0x20,0x20,0x20,0x03,0x00,0x14,0x04]); //set  touch and prox thresholds for each channel
     write([0x0B,0x00,0x30,0x40]);// Set the ATI Targets (Target Counts)
     write([0x07,0x08,0x08,0x08,0x08]);// Set the BASE value for each channel

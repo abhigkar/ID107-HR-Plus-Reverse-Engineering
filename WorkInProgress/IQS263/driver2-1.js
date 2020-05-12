@@ -134,7 +134,7 @@ function forceCommunication(){
             rdyPin.mode("input");
             setTimeout(function() {
                 resolve('done!');
-              });
+              },200);
         },10);
     });
     return promise;

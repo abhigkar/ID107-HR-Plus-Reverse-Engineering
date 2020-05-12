@@ -1,239 +1,259 @@
-//https://github.com/goran-mahovlic/openwatch/blob/master/ID107HR_Plus/Arduino/libraries/IQS263/IQS263.cpp
-
-// I2C DEFAULT SLAVE ADDRESS
-var  IQS263_ADDR = 0x44;
-
-/*********************** IQS263 REGISTERS *************************************/
-var  DEVICE_INFO = 0x00;
-var  SYS_FLAGS = 0x01;
-var  COORDINATES = 0x02;
-var  TOUCH_BYTES = 0x03;
-var  COUNTS = 0x04;
-var  LTA = 0x05;
-var  DELTAS = 0x06;
-var  MULTIPLIERS = 0x07;
-var  COMPENSATION = 0x08;
-var  PROX_SETTINGS = 0x09;
-var  THRESHOLDS = 0x0A;
-var  TIMINGS_AND_TARGETS = 0x0B;
-var  GESTURE_TIMERS = 0x0C;
-var  ACTIVE_CHANNELS = 0x0D;
-
-
-/* Used to switch Projected mode & set Global Filter Halt (0x01 Byte1) */
-var  SYSTEM_FLAGS_VAL = 0x00;
-
-/* Enable / Disable system events (0x01 Byte2)*/
-var  SYSTEM_EVENTS_VAL = 0x00;
-
-/* Change the Multipliers & Base value (0x07 in this order) */
-var  MULTIPLIERS_CH0 = 0x08; //0x19 - default
-var  MULTIPLIERS_CH1 = 0x08;//0x08 - default
-var  MULTIPLIERS_CH2 = 0x08;//0x08 - default
-var  MULTIPLIERS_CH3 = 0x08;//0x08 - default
-var  BASE_VAL        = 0x08;//0x44 - default
-
-/* Change the Compensation for each channel (0x08 in this order) */
-var  COMPENSATION_CH0 = 0x51;
-var  COMPENSATION_CH1 = 0x49;
-var  COMPENSATION_CH2 = 0x4A;
-var  COMPENSATION_CH3 = 0x49;
-
-/* Change the Prox Settings or setup of the IQS263 (0x09 in this order) */
-var  PROXSETTINGS0_VAL = 0x00;
-var  PROXSETTINGS1_VAL = 0x1D;
-var  PROXSETTINGS2_VAL = 0x04;
-var  PROXSETTINGS3_VAL = 0x00;
-var  EVENT_MASK_VAL = 0x00;
-
-/* Change the Thresholds for each channel (0x0A in this order) */
-var  PROX_THRESHOLD = 0x08;
-var  TOUCH_THRESHOLD_CH1 = 0x20;
-var  TOUCH_THRESHOLD_CH2 = 0x20;
-var  TOUCH_THRESHOLD_CH3 = 0x20;
-var  MOVEMENT_THRESHOLD = 0x03;
-var  RESEED_BLOCK = 0x00;
-var  HALT_TIME = 0x14;
-var  I2C_TIMEOUT = 0x04;
-
-/* Change the Timing settings (0x0B in this order) */
-var  LOW_POWER = 0x00;
-var  ATI_TARGET_TOUCH = 0x30;
-var  ATI_TARGET_PROX = 0x40;
-var  TAP_TIMER = 0x05;
-var  FLICK_TIMER = 0x51;
-var  FLICK_THRESHOLD = 0x33;
-
-/* Set Active Channels (0x0D) */
-var  ACTIVE_CHS = 0x0F;
-
-
-//SET UP
 var rdyPin;
 var sdaPin;
 var slcPin;
-
 var i2c;
+var i2cAddr = 0x44;
+var doInitialSetup;
+var irqHandleId;
+var slideThreshold = 5;
+var eventStart = false;
+var prevEvent;
 
-var timeout;
 
-function CommsIQS_start(){
-    timeout=400;
-    while(digitalRead(rdyPin) );              //wait for the IQS to change from ready to not ready
+function readEvents() {
+    while(digitalRead(rdyPin));
+    buf = read(0x01,2);// events
+    if(buf[1] ==0 || buf[1] ==1 || buf[0] == 255 || buf[1] == 255) return;
+    while(digitalRead(rdyPin));
+    buf2 = read(0x03,2);// touch
+    while(digitalRead(rdyPin));
+    buf3 = read(0x02,3); //coordinates
+    //console.log(buf, buf2, buf3);
+    let evt = {sys:buf,touch:buf2,slide:buf3};
+  
+ 
+
+    //check if both events are same
+    //if(prevEvent != undefined && prevEvent != evt)
+      //return true;
+
+    let td = buf2[0] & 0xE; //Remove Prox bit from the touch data
+    if(buf2[0] == 1 && prevEvent != undefined)
+      td = prevEvent.touch[0] & 0xE; 
+
+
+    if(td & 8) {
+      //console.log("Channel 3");
+      //return true;
+    }
+
+    if(buf[1] &  0x80) {
+      prevEvent = undefined;
+      console.log("Left Flick/Slide Down");
+      eventStart = false;
+      return true;
+    }
+    else if(buf[1] &  0x40) {
+       prevEvent = undefined;
+       console.log("right Flick/Slide UP");
+       eventStart = false;
+       return true;
+    }
+    if(buf3[1] == 0 ){// may be end of the events
+      if(prevEvent == undefined){// in no prev event recorded discard
+        //console.log('#: ', evt);// may be a simple touch??
+          if(!(buf[1] & 4)){
+              if(td & 2){console.log('-lower touch');}
+              else if(td & 4){console.log('-upper touch');}
+              else if(td & 8){console.log('-home touch');}
+          }
+        return true;
+      }
+      else{
+        // return some event data
+         eventStart = false;
+         console.log('evt: ',evt,'prevEvent: ',prevEvent);
+         if(prevEvent.slide[0] < evt.slide[0] ){
+           if(slideThreshold <= evt.slide[0] -prevEvent.slide[0])
+             console.log('Slide Up');
+           else{
+                if(td & 2){console.log('lower touch');}
+                else if(td & 4){console.log('upper touch');}
+           }
+         }
+         else if(prevEvent.slide[0] > evt.slide[0] ){
+           if(prevEvent.slide[0] -  evt.slide[0] >= slideThreshold)
+              console.log('Slide Down');
+           else{
+                if(td & 2){console.log('lower touch');}
+                else if(td & 4){console.log('upper touch');}
+           }
+         }
+        else if(prevEvent.slide[0] == evt.slide[0]){
+              if(td & 2){console.log('lower touch');}
+              else if(td & 4){console.log('upper touch');}
+              else if(td & 8){console.log('home touch');}
+        }
+
+        prevEvent = undefined;
+        return true;
+      }
+    }
+    else{
+      eventStart = true;
+      prevEvent = evt;
+      return true;
+    }
+    //console.log(result);
+    return true;
 }
-
-function CommsIQS_stop(){
+var currentState  = 0;
+function handleInterrupt(e){
+    poke32(0x40010600,0x6E524635);
+    if(e.state) {
+      return;
+    }
+    homePressed = false;
+    if (doInitialSetup) {
+		reInit();
+		doInitialSetup = false;
+		return;
+	}
+    if(!readEvents()){
+        return;
+    }
+    if(showReset){
+        doInitialSetup = true;
+        //print('Show Reset Flag is ON.');
+        return;
+    }
+}
+function readRegisters(){
+    while(digitalRead(rdyPin));
+    console.log(read(0x01,1));
+     while(digitalRead(rdyPin));
+    console.log(read(0x09,5));
+     while(digitalRead(rdyPin));
+    console.log(read(0x0D,1));
+     while(digitalRead(rdyPin));
+    console.log(read(0x0A,8));
+     while(digitalRead(rdyPin));
+    console.log(read(0x0B,3));
+     while(digitalRead(rdyPin));
+    console.log(read(0x0C,3));
+     while(digitalRead(rdyPin));
+    console.log(read(0x09,1));
     
-    timeout=400;
-    while(digitalRead(rdyPin) );
-    timeout=400;
-    while(!digitalRead(rdyPin) );
+  }
+function touchEvent(){}
+function slideEvent(){}
+function proxEvent(){}
+function movementEvent(){}
+function tapEvent(){}
+function flickRight(){}
+function flickLeft(){}
+
+function init_setup(){
+        var promise = new Promise(function(resolve, reject) {
+        read(0x00,2);// read device info
+        write([0x01, 0x00]);  //set in projection mode**
+        write([0x09,0x00,0x15,0x00,0x00,0xc6]);//ProxSettings
+        write([0x0D,0x0f]);//Active Channels
+        write([0x0A,0x10,0x15,0x15,0x10,0x08,0x00,0x14,0x04]);//Thresholds
+        write([0x0B,0x02,0x40,0x80]);//Timings & Targets
+        write([0x0C,0x0A,0xA0,0x20]);//Gesture Timers
+        write([0x09,0x10]);//REDO ATI
+        write([0x09,0x00,0x55,0x00,0x00,0xc6]);
+        var timeoutCount=10;
+        var buff;
+        do {
+            while(digitalRead(rdyPin));
+            buff = read(0x09,1);
+        }
+        while ((buff[0] & 0b00000100) && (timeoutCount-- > 0) );
+
+        if (buff[0] & 0b00000100)
+        {
+            print("Timed out");
+        }
+        
+        resolve(true);
+    });
+    return promise;
 }
 
-function CommsIQS_Write(data){
-    i2c.writeTo(IQS263_ADDR, data);
+function reInit(){
+        var promise = new Promise(function(resolve, reject) {
+        //read(0x00,2);// read device info
+        write([0x01, 0x00]);  //set in projection mode**
+        write([0x09,0x00,0x92,0x10,0x00,0x02]);
+        write([0x0A,0xff,0xff,0xff,0xff,0xff,0x00,0x14,0x04]);
+        write([0x0B,0x10,0x30,0x40]);
+        write([0x09,0x10,0xd2,0x10,0x00,0x00]);
+
+        resolve(true);
+    });
+    return promise;
 }
 
-
-function CommsIQS_Read(addr, len){
-    i2c.writeTo({address:IQS263_ADDR, stop:false}, addr);
-    return i2c.readFrom(IQS263_ADDR, len);
+function resetAll(){
+        var promise = new Promise(function(resolve, reject) {
+        //read(0x00,2);// read device info
+        write([0x01, 0x00]);
+        write([0x07, 0x00,0x00,0x00,0x00,0x00]);
+        write([0x08, 0x00,0x00,0x00,0x00]);
+        write([0x09, 0x00,0x00,0x00,0x00,0x00]);
+        write([0x0A,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]);
+        write([0x0B,0x00,0x00,0x00]);
+        write([0x0C,0x00,0x00,0x00]);
+        write([0x0D,0x00]);
+        resolve(true);
+    });
+    return promise;
 }
 
-function init(){
+function read(reg, len){
+    i2c.writeTo({address:i2cAddr, stop:false}, reg);
+    return i2c.readFrom(i2cAddr,len);
+}
+function write(val){
+    i2c.writeTo(i2cAddr, val);
+}
+function event_handshake(){ //iqs263_event_mode_handshake
+    forceCommunication().then(()=>{
+            write([0x09, 0x00, (0x15|0x40)]);
+            print('handshak done');
+        });
+}
+
+function forceCommunication(){
+    var promise = new Promise(function(resolve, reject) {
+        rdyPin.mode("output");
+        digitalWrite(rdyPin,0);
+        setTimeout(()=>{
+            rdyPin.mode("input");
+            setTimeout(function() {
+                resolve('done!');
+              },200);
+        },10);
+    });
+    return promise;
+}
+
+function setup(){ //iqs263_sar_probe
     rdyPin = new Pin(17);
     sdaPin = D16;
     slcPin = D15;
     i2c = new I2C();
 
     rdyPin.mode("input");
+    i2c.setup({scl:slcPin,sda:sdaPin,bitrate: 400000});
 
+    event_handshake();
+   
+    init_setup().then(()=>{
+        irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'falling',debounce:0 });
+    });
 
-    i2c.setup({scl:slcPin,sda:sdaPin});
-
-    CommsIQS_start();
-    var data_buffer = CommsIQS_Read(DEVICE_INFO, 2);
-    CommsIQS_stop();
-    print(data_buffer);
-	if (data_buffer[0]!=0x3C)
-	{
-		return -2;
-    }
-    
-    // Switch the IQS263 into projection mode - if necessary
-    CommsIQS_start();
-    CommsIQS_Write([SYS_FLAGS, SYSTEM_FLAGS_VAL]);
-    CommsIQS_stop();
-
-    // Set active channels
-    data_buffer[0] = ACTIVE_CHS;
-    CommsIQS_start();
-    CommsIQS_Write([ACTIVE_CHANNELS, ACTIVE_CHS]);
-    CommsIQS_stop();
-
-    // Setup touch and prox thresholds for each channel
-    CommsIQS_start();
-    CommsIQS_Write( [THRESHOLDS, PROX_THRESHOLD, TOUCH_THRESHOLD_CH1, 
-        TOUCH_THRESHOLD_CH2,TOUCH_THRESHOLD_CH3,
-        MOVEMENT_THRESHOLD, RESEED_BLOCK, 
-        HALT_TIME, I2C_TIMEOUT]);
-    CommsIQS_stop();
-
-    // Set the ATI Targets (Target Counts)
-    CommsIQS_start();
-    CommsIQS_Write([TIMINGS_AND_TARGETS, ATI_TARGET_TOUCH, ATI_TARGET_PROX]);
-    CommsIQS_stop();
-
-    // Set the BASE value for each channel
-    CommsIQS_start();
-    CommsIQS_Write([MULTIPLIERS, MULTIPLIERS_CH0, MULTIPLIERS_CH1,
-        MULTIPLIERS_CH2, MULTIPLIERS_CH3]);
-    CommsIQS_stop();
-
-     // Setup prox settings
-     CommsIQS_start();
-     CommsIQS_Write([PROX_SETTINGS, PROXSETTINGS0_VAL, (PROXSETTINGS1_VAL|0x40), PROXSETTINGS2_VAL,
-        PROXSETTINGS3_VAL, EVENT_MASK_VAL]);
-     CommsIQS_stop();
-
-     // Setup Compensation (PCC)
-    CommsIQS_start();
-    CommsIQS_Write([COMPENSATION, COMPENSATION_CH0, COMPENSATION_CH1, COMPENSATION_CH2, COMPENSATION_CH3]);
-    CommsIQS_stop();
-
-    // Set timings on the IQS263
-    data_buffer[0] = LOW_POWER;
-    CommsIQS_start();
-    CommsIQS_Write([TIMINGS_AND_TARGETS, LOW_POWER]);
-    CommsIQS_stop();
-
-    // Set gesture timers on IQS263
-     CommsIQS_start();
-    CommsIQS_Write([GESTURE_TIMERS,TAP_TIMER, FLICK_TIMER, FLICK_THRESHOLD]);
-    CommsIQS_stop();
-
-    // Redo ati
-    CommsIQS_start();
-    CommsIQS_Write([PROX_SETTINGS, 0x10]);
-    CommsIQS_stop();
-
-
-    /*var timeoutCount=10;
-    var buff;
-    do {
-        CommsIQS_start();
-        buff = CommsIQS_Read(SYS_FLAGS,1);
-        CommsIQS_stop();
-    }
-    while ((buff[0] & 0b00000100) && (timeoutCount-- > 0) );
-
-    if (buff[0] & 0b00000100)
-	{
-		print("Timed out");
-		return -1;
-    }*/
-    
-    CommsIQS_start();
-    buff = CommsIQS_Read(PROX_SETTINGS, 2);
-    CommsIQS_stop();
-    if (buff[1] & 0x02)
-	{
-		
-		return 1;//Serial.println("Automatic Tuning Implementation occured");
-    }
-    return 0;
+    showReset=false;
+    doInitialSetup = true;
+    currentState = 0;
+    //setInterval(function(){console.log('');},1000);
 }
 
-function getEvents(){
-    var data_buffer;
-    var evt = {};
-    CommsIQS_start();   	// Start the communication session
-    data_buffer = CommsIQS_Read(SYS_FLAGS,2);  // Read the system flags register to enable all events
-	evt.eventFlags=data_buffer[1];
-    
-    CommsIQS_stop(); // Workaround for problem in Wire lib
- 	CommsIQS_start();// Workaround for problem in Wire lib
 
-    data_buffer = CommsIQS_Read(TOUCH_BYTES, 1); // Read from the touch bytes register to enable touch events
-	evt.touchFlags=data_buffer[0];
 
-	CommsIQS_stop(); // Workaround for problem in Wire lib
-	CommsIQS_start();// Workaround for problem in Wire lib
-
-    data_buffer = CommsIQS_Read(COORDINATES, 3);  // Read the coordinates register to get slider coordinates
-	evt.wheelPos=data_buffer[0];
-	evt.relativePos = (data_buffer[1]  | data_buffer[2]<<8);	
-	CommsIQS_stop();       // Stop the communication session
-	
-    events = evt.eventFlags;
-	print('events >> ', events);
-	return evt;
+function kill(){
+    clearWatch(irqHandleId);
 }
-init()
-print("Init OK");
-var counter =0;
-var intVal = setInterval(()=>{
-if(counter > 60) clearInterval(intVal);
-getEvents();
-counter++;
-},1000);
+

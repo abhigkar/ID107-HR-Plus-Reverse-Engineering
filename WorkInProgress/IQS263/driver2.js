@@ -29,8 +29,23 @@ var event = {
 
 function readEvents(){
     let timeout = 400;
-    while(digitalRead(rdyPin) &&  --timeout);
-    var buf = read(0x01,2);
+    while(digitalRead(rdyPin));
+
+    i2c.writeTo({address:i2cAddr, stop:false}, 0x01);
+    var buf = i2c.readFrom({address:i2cAddr, stop:true},6);
+    //console.log(buf);
+    i2c.writeTo({address:i2cAddr, stop:false}, 0x03);
+    buf = i2c.readFrom({address:i2cAddr, stop:true},1);
+    event.touchData.d1 = buf[0];
+    //event.touchData.d2 = buf[1];
+
+    i2c.writeTo({address:i2cAddr, stop:false}, 0x02);
+    buf = i2c.readFrom({address:i2cAddr, stop:true},1);
+    event.cordData.d1 = buf[0];
+    //event.cordData.d2 = buf[1];
+    //event.cordData.d3 = buf[2];
+
+
     if(buf[0] == 0 && buf[1] == 0)
         return false;
 
@@ -44,17 +59,7 @@ function readEvents(){
     
     if(buf[1] & 0x02) {
         event.touch  = true; 
-        let timeout = 400;
-        while(digitalRead(rdyPin) &&  --timeout);
-        buf = read(0x03,2);
-        event.touchData.d1 = buf[0];
-        event.touchData.d2 = buf[1];
-        timeout = 400;
-        while(digitalRead(rdyPin) &&  --timeout);
-        buf = read(0x02,3);
-        event.cordData.d1 = buf[0];
-        event.cordData.d2 = buf[1];
-        event.cordData.d2 = buf[2];
+        
     }else {
         event.touch  = false;
     }
@@ -68,77 +73,33 @@ function readEvents(){
 
 function handleInterrupt(){
     if (doInitialSetup) {
-        print('Initial setup started');
 		if(!init_setup()){
-            clearWatch(irqHandleId);
-            print('Device Not found, IRQ is cleared');
         }
-        print('Initial setup completed');
 		doInitialSetup = false;
 		return;
 	}
     if(!readEvents()){
-        //print('NO EVENT');
         return;
     }
     if(showReset){
         doInitialSetup = true;
-        clearWatch(irqHandleId);
-        print('Show Reset Flag is ON. IRQ is cleared');
+    }
+    if(event.slide){
+        console.log(event);
     }
 
-    if(event.flickLeft) print('Report >> flickLeft');
-    if(event.flickRight) print('Report >> flickRight');
-
-    if(currentState == 0){
-        if (event.touch) {
-			//print("Touch0 :",event.touchData.d1);
-			if(event.slide | event.flickLeft | event.flickRight)
-			    currentState = 1;
-		} else if(event.slide){
-			//print("SliderCoords : ",((event.cordData.d3<<8)|event.cordData.d2));
-			currentState = 1;
-		}else
-			currentState = 0;
-    }
-    if (currentState == 1) {
-		/*	check the Slide Corrds */
-		if (event.slide) {
-			//sliderCoords = data_buffer[3];
-			print("SliderCoords : ",((event.cordData.d3<<8)|event.cordData.d2));
-            print('Report >> BTN_TOUCH ON');
-            setTimeout(()=>{
-                if (currentState > 0) {
-                    /*	Now from here Reseed and go back to State 0	*/
-                    currentState = 0;
-                    print("Touch Timeout\n");
-                    print('Report >> BTN_TOUCH OFF');
-                }
-            },50);
-			return;
-		}
-
-		/*	Touch is still active - check other event	*/
-		if (event.touch) {
-			print("Touch0 :",event.touchData.d1);
-			currentState = 0;
-			print('Report >> BTN_TOUCH OFF');
-		}else if(event.prox){
-			print("Prox End");
-			print('Report >> BTN_TOUCH OFF');
-			currentState = 0;
-		}
-	} /*	end State 1	*/
 }
 
+function touchEvent(){}
+function slideEvent(){}
+function proxEvent(){}
+function movementEvent(){}
+function tapEvent(){}
+function flickRight(){}
+function flickLeft(){}
 
 function init_setup(){
-    var deviceinfo = read(0x00,2);// read device info
-    if (deviceinfo[0]!=0x3C)
-	{
-        print('Device not found');
-        return false;
-    }
+    read(0x00,2);// read device info
     write([0x01, 0x00]);  //set in projection mode
     write([0x0D,0x07]);
     write([0x0A,0x10,0x20,0x20,0x20,0x03,0x00,0x14,0x04]); //set  touch and prox thresholds for each channel
@@ -188,16 +149,14 @@ function setup(){ //iqs263_sar_probe
     i2c = new I2C();
     
     rdyPin.mode("input");
-    i2c.setup({scl:slcPin,sda:sdaPin});
+    i2c.setup({scl:slcPin,sda:sdaPin,bitrate: 400000});
 
     event_handshake();
-    irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'falling',debounce:0 });
+    irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'both',debounce:0 });
 
     showReset=false;
     doInitialSetup = true;
     currentState = 0;
-
-    print('IQR received ',irqHandleId);
 }
 
 function kill(){

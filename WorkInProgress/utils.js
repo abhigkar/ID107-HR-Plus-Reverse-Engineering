@@ -75,7 +75,7 @@ const pinScan2 = (sda) => {
   }, 500);
 }
 
-
+var danger = require("heatshrink").decompress(atob("j0egMAj/AgEB+/ggEcgIHB4EBwECgEDgEYgEGgFAAoIaBgEggkAgWAikAhUAqEAvEB50dsEDvHzgEN8fsg8nx8zy+czneo0DgfL40cjkn7l54/B9EP+0B2EuFwPF2EAjMG4EI+UDwF+sEb+OH4Hj8V553hh8D8FonBOBMoIACA=="));
 function watchFun(e){print(e.state);}
 setWatch(watchFun, D17, {repeat: true, edge: 'falling' });
 
@@ -128,3 +128,12 @@ var intVal = setInterval(()=>{
     console.log('diff ',(prevRead -read),'current read ', read);
     prevRead = read;
 },2000);
+
+function con(b1,b2){
+  var sign = b1 & (1 << 7);
+  var x = (((b1& 0xFF) << 8) | (b2 & 0xFF));
+  if (sign) {
+     result = 0xFFFF0000 | x;  // fill in most significant bits with 1's
+  }
+  return result;
+}

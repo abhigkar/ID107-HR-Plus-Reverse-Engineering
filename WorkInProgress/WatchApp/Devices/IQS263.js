@@ -24,50 +24,45 @@ var irqHandleId;
 var rdyPin;
 var showReset;
 var doInitialSetup;
-var homePressed;
-var homeTimeout;
 var read, write;
 var self;
 function IQS263(options,r,w) {
     read = r;
     write = w;
+    self = this;
 }
-function readEvents(){
-    while(digitalRead(rdyPin)); // detect comm window
+function readEvents() {
+    while(digitalRead(rdyPin));
     buf = read(0x01,2);// events
-    if(buf[1] ==0 || buf[1] ==1) return false; // no data return
-    while(digitalRead(rdyPin));// detect comm window
-    buf2 = read(0x03,2);// touch 
-    while(digitalRead(rdyPin));// detect comm window
+    if(buf[1] ==0 || buf[1] ==1 || buf[0] == 255 || buf[1] == 255) return;
+    while(digitalRead(rdyPin));
+    buf2 = read(0x03,2);// touch
+    while(digitalRead(rdyPin));
     buf3 = read(0x02,3); //coordinates
-    (buf[0] &0x80) ? (showReset = true) : (showReset = false);
 
     let td = buf2[0] & 0xE;
-    if((td<< 0x1E) < 0 ) self.emit('touch',{chn:1});
-    if((td<< 0x1D) < 0 ) self.emit('touch',{chn:2});
-    if((td<< 0x1C) < 0 ) {//home touch
-      homePressed = true;
-      self.emit('touch',{chn:3});
-      homeTimeout = setTimeout(()=>{
-        if(homePressed) homePressed = false;
-        homeTimeout = 0;
-        self.emit('longhome',null);
-      },5000);
+  
+  
+
+    if(buf[1] &  0x80) { //fr
+      //counter1++;
+      self.emit('flick',{dir:'right'});
     }
-    else{
-        homePressed = false;
-        if(homeTimeout)clearTimeout(homeTimeout);
-        homeTimeout=0;
-        
+    else if(buf[1] &  0x40) {//fl
+       //counter2++;
+       self.emit('flick',{dir:'left'});
     }
-    if(buf[1] &  0x80)  self.emit('flick',{dir:'left'});
-    if(buf[1] &  0x40)  self.emit('flick',{dir:'right'});
+    if(td & 8) {
+      //counter1 = counter2 = 0;
+      self.emit('touch',{dir:'home'});
+      digitalPulse(D25,1,100);
+    }
+    //g.clear().drawString(counter1,0,0).drawString(counter2,0,70).flip();
     return true;
-} 
+
+}
 function handleInterrupt(e){
-    poke32(0x40010600,0x6E524635);//POKE watchdog only for ID107 HR Plus
     if(e.state)return;//IF ready pin is HIGH return
-    homePressed = false;
     if (doInitialSetup) {
 		if(!init_setup()){
         }
@@ -77,12 +72,7 @@ function handleInterrupt(e){
     if(!readEvents()){
         return;
     }
-    if(showReset){
-        //doInitialSetup = true;
-        //print('Show Reset Flag is ON.');
-        return;
-    }
- 
+
 }
 function event_handshake(){
     forceCommunication().then(()=>{
@@ -106,12 +96,12 @@ function init_setup(){
     var promise = new Promise(function(resolve, reject) {
         read(0x00,2);// read device info
         write([0x01, 0x00]);  //set in projection mode**
-        write([0x09,0x00,0x15,0x00,0x00,0xc6]);
-        write([0x0D,0x0f]);
-        write([0x0A,0x15,0x15,0x10,0x08,0x00,0x14,0x04]);
-        write([0x0B,0x02,0x40,0x80]);
-        write([0x0C,0x0A,0x14,0x38]);
-        write([0x09,0x10]);
+        write([0x09,0x00,0x15,0x00,0x00,0xc6]);//ProxSettings
+        write([0x0D,0x0f]);//Active Channels
+        write([0x0A,0x10,0x15,0x15,0x10,0x08,0x00,0x14,0x04]);//Thresholds
+        write([0x0B,0x02,0x40,0x80]);//Timings & Targets
+        write([0x0C,0x0A,0xA0,0x20]);//Gesture Timers
+        write([0x09,0x10]);//REDO ATI
         write([0x09,0x00,0x55,0x00,0x00,0xc6]);
         var timeoutCount=10;
         var buff;
@@ -119,25 +109,25 @@ function init_setup(){
             while(digitalRead(rdyPin));
             buff = read(0x09,1);
         }
-        while ((buff[0] & 0b00000100) && (timeoutCount-- > 0) );
-        if (buff[0] & 0b00000100)
+        while ((buff[0] & 4) && (timeoutCount-- > 0) );
+
+        if (buff[0] & 4)
         {
-            console.log("Timed out");
+            print("Timed out");
         }
+        
         resolve(true);
-    }
-);
-return promise;
+    });
+    return promise;
 }
 IQS263.prototype.init = function() {
-    self = this;
+    
     event_handshake();
     init_setup().then(()=>{
-        irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'both',debounce:0 });
+        irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'falling',debounce:0 });
     });
     showReset=false;
     doInitialSetup = true;
-    setInterval(function(){poke32(0x40010600,0x6E524635);},100);//POKE watchdog only for ID107 HR Plus
 };
 
 IQS263.prototype.kill = function() {
