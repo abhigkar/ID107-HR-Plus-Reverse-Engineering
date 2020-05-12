@@ -18,7 +18,7 @@ function go(){
 }
 // SPI
 SPI1.setup({mosi: D31,sck: D30});
-var g = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/WatchApp/Devices/oledDisplay.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
+var g = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/Devices/oledDisplay.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
 
 ```
 
