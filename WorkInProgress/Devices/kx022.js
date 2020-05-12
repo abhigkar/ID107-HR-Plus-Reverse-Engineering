@@ -10,7 +10,7 @@
   function KX022(options,r,w) {
     this.r = r;
     this.w = w;
-    if (this.r(REG.WHO_AM_I,1)[0]!=20) throw new Error("WHO_AM_I incorrect");
+    if (this.r(0x0F,1)[0]!=20) throw new Error("WHO_AM_I incorrect");
 
   }
   
