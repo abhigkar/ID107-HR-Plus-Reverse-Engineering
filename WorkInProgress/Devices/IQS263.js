@@ -40,7 +40,7 @@ function readEvents() {
     buf2 = read(0x03,2);// touch
     while(digitalRead(rdyPin));
     buf3 = read(0x02,3); //coordinates
-    console.log(buf, buf2, buf3);
+    //console.log(buf, buf2, buf3);
 
     let td = buf2[0] & 0xE;
 
@@ -118,11 +118,17 @@ IQS263.prototype.init = function() {
     
     event_handshake();
     init_setup().then(()=>{
-        intervalId = setInterval(function(){ let e = readEvents(); self.onTouch(e);},1);
+        intervalId = setInterval(function(){ handleReadOp();},1);
     });
     showReset=false;
     doInitialSetup = true;
 };
+
+function handleReadOp(){
+    let e = readEvents(); 
+    if(e == undefined) return;
+    self.onTouch(e)
+}
 
 IQS263.prototype.onTouch = function(event) {
        
