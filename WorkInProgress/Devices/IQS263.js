@@ -35,11 +35,15 @@ function readEvents() {
     let evt = {leftFlick:false, rightFlick:false, channe1:false,channe2:false,channe3:false, touchArea:0, rawCord:0};
     while(digitalRead(rdyPin));
     buf = read(0x01,2);// events
+  
+    while(digitalRead(rdyPin));
+    buf2 = read(0x03,1);// touch
+    
+    while(digitalRead(rdyPin));
+    buf3 = read(0x02,1); //coordinates
+    
     if(buf[1] ==0 || buf[1] ==1 || buf[0] == 255 || buf[1] == 255) return;
-    while(digitalRead(rdyPin));
-    buf2 = read(0x03,2);// touch
-    while(digitalRead(rdyPin));
-    buf3 = read(0x02,3); //coordinates
+    if(buf1[1] ==0 || buf1[1] ==1) return; // ignore prox data
     console.log(buf, buf2, buf3);
 
     let td = buf2[0] & 0xE;
