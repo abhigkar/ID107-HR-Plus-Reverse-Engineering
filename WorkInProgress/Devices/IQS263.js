@@ -20,7 +20,7 @@ iqs263.on('touch',(data)=>{}); //data = chn => channel 1/2
 iqs263.on('flick',(data)=>{});
 */
 
-var irqHandleId;
+var intervalId;
 var rdyPin;
 var showReset;
 var doInitialSetup;
@@ -32,6 +32,7 @@ function IQS263(options,r,w) {
     self = this;
 }
 function readEvents() {
+    let evt = {leftFlick:false, rightFlick:false, channe1:false,channe2:false,channe3:false, touchArea:0, rawCord:0};
     while(digitalRead(rdyPin));
     buf = read(0x01,2);// events
     if(buf[1] ==0 || buf[1] ==1 || buf[0] == 255 || buf[1] == 255) return;
@@ -39,39 +40,32 @@ function readEvents() {
     buf2 = read(0x03,2);// touch
     while(digitalRead(rdyPin));
     buf3 = read(0x02,3); //coordinates
+    console.log(buf, buf2, buf3);
 
     let td = buf2[0] & 0xE;
-  
-  
 
-    if(buf[1] &  0x80) { //fr
-      //counter1++;
-      self.emit('flick',{dir:'right'});
+    if(buf[1] &  0x80) {
+      evt.leftFlick = true;
     }
-    else if(buf[1] &  0x40) {//fl
-       //counter2++;
-       self.emit('flick',{dir:'left'});
+    else if(buf[1] &  0x40) {
+       evt.rightFlick = true;
     }
-    if(td & 8) {
-      //counter1 = counter2 = 0;
-      self.emit('touch',{dir:'home'});
-      digitalPulse(D25,1,100);
-    }
-    //g.clear().drawString(counter1,0,0).drawString(counter2,0,70).flip();
-    return true;
 
-}
-function handleInterrupt(e){
-    if(e.state)return;//IF ready pin is HIGH return
-    if (doInitialSetup) {
-		if(!init_setup()){
-        }
-		doInitialSetup = false;
-		return;
-	}
-    if(!readEvents()){
-        return;
+    if(td & 2) {
+         evt.channe2 =true;
     }
+    else if(td & 4) {
+         evt.channe1 =true;
+    }
+    else if(td & 8) {
+       evt.channe3 =true;
+    }
+    evt.rawCord = buf3[0];
+    if(buf3[0] >=0 && buf3[0] < 42){evt.touchArea = 1;}
+    else if(buf3[0] >= 43 && buf3[0] < 84){evt.touchArea = 2;}
+    else if(buf3[0] >=85 && buf3[0] < 256){evt.touchArea = 3;}
+
+    return evt;
 
 }
 function event_handshake(){
@@ -124,14 +118,18 @@ IQS263.prototype.init = function() {
     
     event_handshake();
     init_setup().then(()=>{
-        irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'falling',debounce:0 });
+        intervalId = setInterval(function(){ this.onTouch(readEvents());},1);
     });
     showReset=false;
     doInitialSetup = true;
 };
 
+IQS263.prototype.onTouch = function(event) {
+       
+};
+
 IQS263.prototype.kill = function() {
-    clearWatch(irqHandleId);
+    clearInterval(intervalId);
 };
 
 exports.IQS263 = IQS263;
