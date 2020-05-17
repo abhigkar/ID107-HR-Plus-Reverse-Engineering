@@ -118,7 +118,7 @@ IQS263.prototype.init = function() {
     
     event_handshake();
     init_setup().then(()=>{
-        intervalId = setInterval(function(){ this.onTouch(readEvents());},1);
+        intervalId = setInterval(function(){ onTouch(readEvents());},1);
     });
     showReset=false;
     doInitialSetup = true;
