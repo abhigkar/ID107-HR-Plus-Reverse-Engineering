@@ -41,9 +41,9 @@ function readEvents() {
     
     while(digitalRead(rdyPin));
     buf3 = read(0x02,1); //coordinates
-    
+
     if(buf[1] ==0 || buf[1] ==1 || buf[0] == 255 || buf[1] == 255) return;
-    if(buf1[1] ==0 || buf1[1] ==1) return; // ignore prox data
+    if(buf2[1] ==0 || buf2[1] ==1) return; // ignore prox data
     console.log(buf, buf2, buf3);
 
     let td = buf2[0] & 0xE;
