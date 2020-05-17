@@ -118,7 +118,7 @@ IQS263.prototype.init = function() {
     
     event_handshake();
     init_setup().then(()=>{
-        intervalId = setInterval(function(){ handleReadOp();},1);
+        intervalId = setInterval(function(){ handleReadOp();},10);
     });
     showReset=false;
     doInitialSetup = true;
