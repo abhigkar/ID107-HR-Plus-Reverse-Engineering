@@ -40,7 +40,7 @@ function readEvents() {
     buf2 = read(0x03,2);// touch
     while(digitalRead(rdyPin));
     buf3 = read(0x02,3); //coordinates
-    //console.log(buf, buf2, buf3);
+    console.log(buf, buf2, buf3);
 
     let td = buf2[0] & 0xE;
 
