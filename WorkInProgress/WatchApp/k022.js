@@ -1,5 +1,5 @@
 const i2cAddress = 0x1E;
-const i2c;
+let i2c = null;
 const read = (reg,len) =>{
     i2c.writeTo(i2cAddress, reg);
     return i2c.readFrom(i2cAddress, len);
@@ -15,7 +15,7 @@ const readRawAcce = ()=>{
         let coords=new Int16Array(this.r(6,6).buffer);
         return coords;
     }
-}
+};
 const readAcce = ()=>{
     var d =  readRawAcce();
     if(!d) return;
@@ -60,8 +60,8 @@ const readAcce = ()=>{
         pitch: Pitch,
         roll: Roll,
         tilt: Tilt
-    }
-}
+    };
+};
 
 function init(cfg){
     i2c = cfg.i2c;
@@ -76,7 +76,7 @@ function init(cfg){
     const result = {
         readRaw: readRawAcce,
         readAcce: readAcce
-    }
+    };
     return result;
 }
 
