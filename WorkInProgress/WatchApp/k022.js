@@ -12,7 +12,7 @@ const write = (reg, data) =>{
 const readRawAcce = ()=>{
     let buf = read(0x12,2);
     if((buf[1] & 16)!=0){// DRDY
-        let coords=new Int16Array(this.r(6,6).buffer);
+        let coords=new Int16Array(read(6,6).buffer);
         return coords;
     }
 };
