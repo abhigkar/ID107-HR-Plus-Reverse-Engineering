@@ -82,4 +82,4 @@ function init(cfg){
 
 
 
-exports.module = init;
+module.exports  = init;
