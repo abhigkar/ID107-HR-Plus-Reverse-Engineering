@@ -11,10 +11,10 @@ const write = (reg, data) =>{
 
 const readRawAcce = ()=>{
     let buf = read(0x12,2);
-    //if((buf[1] & 16)!=0){// DRDY
+    if((buf[1] & 16)!=0){// DRDY
         let coords=new Int16Array(read(6,6).buffer);
         return {x:coords[0],y:coords[1],z:coords[2]};
-    //}
+    }
 };
 const readAcce = ()=>{
     var d =  readRawAcce();

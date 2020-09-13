@@ -9,8 +9,5 @@ const globals = {
     SPIFLASHJS      :   moduleLocation + 'PN25F08.js',
     HEARTJS         :   moduleLocation + 'Si114x.js',
 };
-
-
-
 exports = globals;
 
