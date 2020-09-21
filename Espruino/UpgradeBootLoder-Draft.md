@@ -16,6 +16,28 @@ NRF.restart(); // will schedule SoftDevice restart after you disconnect
 ```
 [a=$((0x78000));for i in `base64 -w96  sd_bl.bin` ; do echo "f(${a},atob('$i'));";a=$((a+72)) ; done]
 ```
+```
+E.setFlags({unsafeFlash:1});
+var fl=require("Flash");
+var ladd=0;var lpg=0;var nadd=0;// last address, last page addr, next addr
+var flash=function(a,d){
+  if (nadd>0 && nadd<a) console.log("Hole in data, got "+a.toString(16)+", expected "+nadd.toString(16));
+  var p=fl.getPage(a).addr;
+  if (p>lpg) {fl.erasePage(p);lpg=p;console.log("Erasing page 0x"+p.toString(16));}
+  p=fl.getPage(a+d.length-1).addr;
+  if (p>lpg) {fl.erasePage(p);lpg=p;console.log("Erasing page 0x"+p.toString(16));}
+  if (a>ladd) {fl.write(d,a);ladd=a;nadd=a+d.length;}
+  console.log(a.toString(16)+" F-OK")
+}
+var verify=function(a,d){
+  if (typeof(d)=="string") d=E.toUint8Array(d);
+  var m=fl.read(d.length,a)
+  for (var i=0;i<d.length;i++,a++)
+    if (m[i]!=d[i]) console.log(a.toString(16)+" V-FAIL");
+  console.log(a.toString(16)+" V-OK");
+}
+var f=flash
+```
 
 5- verify bootloader (run f=verify and paste bootloader again)
 
