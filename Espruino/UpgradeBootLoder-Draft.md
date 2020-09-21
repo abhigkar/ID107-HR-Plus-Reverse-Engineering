@@ -1,3 +1,7 @@
+Original work cradit @fanoush [https://github.com/fanoush]
+https://github.com/fanoush/ds-d6/blob/master/espruino/DFU/DK08/README.md
+https://github.com/fanoush/ds-d6/wiki/Replacing-Nordic-DFU-bootloader
+
 1- Flash NRF.Restart() patched Espruino for SDK11
 2- Clear UICR
 ```
