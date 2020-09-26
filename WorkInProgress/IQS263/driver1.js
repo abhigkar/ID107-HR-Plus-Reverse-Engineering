@@ -1,3 +1,21 @@
+function go(){
+   //set font
+   require("Font6x12").add(Graphics);
+   require("GoodTime18x19").add(Graphics);
+   g.setFontGoodTime18x19();
+   //clear display 
+   g.clear(); 
+   g.setRotation(2);
+   // write some text
+   g.drawString("000",0,0);
+   // write to the screen
+   g.flip(); 
+}
+// SPI
+SPI1.setup({mosi: D31,sck: D30});
+var g = require("https://raw.githubusercontent.com/abhigkar/ID107-HR-Plus-Reverse-Engineering/master/WorkInProgress/Devices/ID107PlusOLED.js").connectSPI(SPI1, D22, D20, go, {cs: D19, pwr:D26});
+
+
 var rdyPin;
 var sdaPin;
 var slcPin;
@@ -5,96 +23,39 @@ var i2c;
 var i2cAddr = 0x44;
 var doInitialSetup;
 var irqHandleId;
-var slideThreshold = 5;
-var eventStart = false;
-var prevEvent;
-
+var counter1 = 0;
+var counter2 = 0;
+var counter3 = 0;
+var counter4 = 0;
+var counter5 = 0;
 
 function readEvents() {
-    while(digitalRead(rdyPin));
+
+   while(digitalRead(rdyPin));
     buf = read(0x01,2);// events
     if(buf[1] ==0 || buf[1] ==1 || buf[0] == 255 || buf[1] == 255) return;
     while(digitalRead(rdyPin));
-    buf2 = read(0x03,2);// touch
+    buf2 = read(0x03,1);// touch
     while(digitalRead(rdyPin));
-    buf3 = read(0x02,3); //coordinates
-    //console.log(buf, buf2, buf3);
-    let evt = {sys:buf,touch:buf2,slide:buf3};
-  
- 
+    buf3 = read(0x02,1); //coordinates
+    console.log(buf, buf2, buf3);
 
-    //check if both events are same
-    //if(prevEvent != undefined && prevEvent != evt)
-      //return true;
-
-    let td = buf2[0] & 0xE; //Remove Prox bit from the touch data
-    if(buf2[0] == 1 && prevEvent != undefined)
-      td = prevEvent.touch[0] & 0xE; 
-
-
-    if(td & 8) {
-      //console.log("Channel 3");
-      //return true;
-    }
+    let td = buf2[0] & 0xE;
 
     if(buf[1] &  0x80) {
-      prevEvent = undefined;
-      console.log("Left Flick/Slide Down");
-      eventStart = false;
-      return true;
+     counter1++;
     }
     else if(buf[1] &  0x40) {
-       prevEvent = undefined;
-       console.log("right Flick/Slide UP");
-       eventStart = false;
-       return true;
+        counter2++;
     }
-    if(buf3[1] == 0 ){// may be end of the events
-      if(prevEvent == undefined){// in no prev event recorded discard
-        //console.log('#: ', evt);// may be a simple touch??
-          if(!(buf[1] & 4)){
-              if(td & 2){console.log('-lower touch');}
-              else if(td & 4){console.log('-upper touch');}
-              else if(td & 8){console.log('-home touch');}
-          }
-        return true;
-      }
-      else{
-        // return some event data
-         eventStart = false;
-         console.log('evt: ',evt,'prevEvent: ',prevEvent);
-         if(prevEvent.slide[0] < evt.slide[0] ){
-           if(slideThreshold <= evt.slide[0] -prevEvent.slide[0])
-             console.log('Slide Up');
-           else{
-                if(td & 2){console.log('lower touch');}
-                else if(td & 4){console.log('upper touch');}
-           }
-         }
-         else if(prevEvent.slide[0] > evt.slide[0] ){
-           if(prevEvent.slide[0] -  evt.slide[0] >= slideThreshold)
-              console.log('Slide Down');
-           else{
-                if(td & 2){console.log('lower touch');}
-                else if(td & 4){console.log('upper touch');}
-           }
-         }
-        else if(prevEvent.slide[0] == evt.slide[0]){
-              if(td & 2){console.log('lower touch');}
-              else if(td & 4){console.log('upper touch');}
-              else if(td & 8){console.log('home touch');}
-        }
 
-        prevEvent = undefined;
-        return true;
-      }
+ if(td & 8) {
+       counter1 = counter2 = 0;
+      digitalPulse(D25,1,100);
     }
-    else{
-      eventStart = true;
-      prevEvent = evt;
-      return true;
-    }
-    //console.log(result);
+    
+   
+    g.clear().drawString(counter1,0,0).drawString(counter2,0,70).flip();
     return true;
 }
 var currentState  = 0;
@@ -242,7 +203,8 @@ function setup(){ //iqs263_sar_probe
     event_handshake();
    
     init_setup().then(()=>{
-        irqHandleId = setWatch(handleInterrupt, rdyPin, {repeat: true, edge: 'falling',debounce:0 });
+        
+      //setInterval(function(){ poke32(0x40010600,0x6E524635);readEvents();},1);
     });
 
     showReset=false;
