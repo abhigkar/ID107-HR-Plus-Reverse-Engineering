@@ -60,7 +60,7 @@ var initCmds = new Uint8Array([
 exports.connectSPI = function(spi, dc,  rst, callback, options) {
 	var pwr = options?options.pwr:undefined;
     var cs = options?options.cs:undefined;
-    var oled = Graphics.createArrayBuffer(C.OLED_HEIGHT, C.OLED_WIDTH, 1, { vertical_byte: true });
+    var oled = Graphics.createArrayBuffer(C.OLED_HEIGHT*2, C.OLED_WIDTH, 1, { vertical_byte: true });
 	if(pwr){
 		pwr.mode("output");
 		digitalWrite(pwr, 1);
