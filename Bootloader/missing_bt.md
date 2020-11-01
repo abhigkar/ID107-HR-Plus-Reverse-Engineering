@@ -1,4 +1,4 @@
-Die to some unfortunate and unknown reason, my original bootloader was deleted by espruino(wrong flash size config in board file). I used below script to restore it back 
+Due to some unfortunate and unknown reason, my original bootloader was deleted by espruino(wrong flash size config in board file). I used below script to restore it back 
 ```
 E.setFlags({unsafeFlash:1});
 var fl=require("Flash");
