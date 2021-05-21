@@ -1,3 +1,8 @@
+DO NOT USE THIS THIS WILL BRICK YOUR DEVICE. 
+WRONG FILE IS TAKEN AND THE BASE64
+
+
+
 Original work cradit @fanoush [https://github.com/fanoush]
 https://github.com/fanoush/ds-d6/blob/master/espruino/DFU/DK08/README.md
 https://github.com/fanoush/ds-d6/wiki/Replacing-Nordic-DFU-bootloader
