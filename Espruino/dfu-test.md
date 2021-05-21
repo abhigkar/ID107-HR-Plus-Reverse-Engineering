@@ -52,6 +52,7 @@ var verify=function(a,d){
 }
 var f=flash
 
+//this is espruino sdk12 bootloader
 
 f(491520,atob('gH8AIDmFBwBhhQcAY4UHAGWFBwBnhQcAaYUHAAAAAAAAAAAAAAAAAAAAAABNrAcAbYUHAAAAAABvhQcAcYUHAHOFBwBzhQcA'));
 f(491592,atob('c4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAmasHAHOFBwBzhQcA'));
