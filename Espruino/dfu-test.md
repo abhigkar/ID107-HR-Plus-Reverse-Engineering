@@ -1,3 +1,4 @@
+```
 >peek32(0x10001014).toString(16);
 ="79000"
 >peek32(0x10001018).toString(16);
@@ -8,17 +9,19 @@
 ="fffffffe"
 >peek32(0x10001208).toString(16); // APROTECT -device is locked if lowest byte is 00
 ="ffffff00"
+```
 --------------------------------------------------------------
-
+```
 NRF.onRestart=function(){
 poke32(0x4001e504,2);while(!peek32(0x4001e400)); // enable flash erase
 poke32(0x4001e514,1);while(!peek32(0x4001e400)); // erase whole uicr
 poke32(0x4001e504,0);while(!peek32(0x4001e400)); // disable flash writing
 }
 NRF.restart(); // will schedule SoftDevice restart after you disconnect
+```
 DONE
 ----------------------------------------------------------------------------
-
+```
 NRF.onRestart=function(){
 	digitalPulse(D25,1,100);
 		poke32(0x4001e504,1);while(!peek32(0x4001e400)); // enable flash writing
@@ -28,9 +31,9 @@ NRF.onRestart=function(){
 		digitalPulse(D25,1,100);
 }
 NRF.restart();
-
+```
 ---------------------------------------------------------------------------
-
+```
 E.setFlags({unsafeFlash:1});
 var fl=require("Flash");
 var ladd=0;var lpg=0;var nadd=0;// last address, last page addr, next addr
@@ -246,7 +249,9 @@ f(505056,atob('+LUAv/i8CLyeRnBHACwAIAAQAgcj0bzqX3gjFd7vEhIAAAAARGZ1VGFyZwAAAAAAM
 f(505128,atob('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'));
 f(505200,atob('AAAAAAAAAAD//wAAMgAAAACQ0AMlhAcAAYQHAA=='));
 
-
+```
 ----------------
+```
 poke32(0x40000000+0x51c,1)
+```
 
