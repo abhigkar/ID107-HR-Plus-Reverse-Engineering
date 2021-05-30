@@ -55,7 +55,7 @@ var verify=function(a,d){
 }
 var f=flash
 
-//this is espruino sdk12 bootloader
+//this is SDK11 bootloader for address 0x78000 made by nrf52-legacy-bootloader
 
 f(491520,atob('gH8AIDmFBwBhhQcAY4UHAGWFBwBnhQcAaYUHAAAAAAAAAAAAAAAAAAAAAABNrAcAbYUHAAAAAABvhQcAcYUHAHOFBwBzhQcA'));
 f(491592,atob('c4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAc4UHAHOFBwBzhQcAmasHAHOFBwBzhQcA'));
